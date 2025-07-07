@@ -248,6 +248,6 @@ app.get('/api/active-users', authenticate, async (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
+app.listen(port, '192.168.100.60', () => {
+  console.log(`Server running at http://192.168.100.60:${port}`);
 });

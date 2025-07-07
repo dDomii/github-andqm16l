@@ -70,7 +70,7 @@ export function PayrollReports() {
     setLoading(true);
     setError('');
     try {
-      const response = await fetch('http://localhost:3001/api/payslips/generate', {
+      const response = await fetch('http://192.168.100.60:3001/api/payslips/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -102,7 +102,7 @@ export function PayrollReports() {
     if (!startDate) return;
     
     try {
-      const response = await fetch(`http://localhost:3001/api/payroll-report?weekStart=${startDate}`, {
+      const response = await fetch(`http://192.168.100.60:3001/api/payroll-report?weekStart=${startDate}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -129,7 +129,7 @@ export function PayrollReports() {
 
   const handleSave = async (entryId: number) => {
     try {
-      const response = await fetch(`http://localhost:3001/api/payroll/${entryId}`, {
+      const response = await fetch(`http://192.168.100.60:3001/api/payroll/${entryId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -231,7 +231,7 @@ export function PayrollReports() {
   };
 
   const formatCurrency = (amount: number) => {
-    return `₱${amount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `₱${amount.toFixed(2)}`;
   };
 
   const formatDate = (dateString: string) => {

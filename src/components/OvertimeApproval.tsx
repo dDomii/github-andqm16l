@@ -23,7 +23,7 @@ export function OvertimeApproval() {
 
   const fetchOvertimeRequests = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/overtime-requests', {
+      const response = await fetch('http://192.168.100.60:3001/api/overtime-requests', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -36,7 +36,7 @@ export function OvertimeApproval() {
   const handleApproval = async (requestId: number, approved: boolean) => {
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:3001/api/overtime-requests/${requestId}/approve`, {
+      const response = await fetch(`http://192.168.100.60:3001/api/overtime-requests/${requestId}/approve`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -77,9 +77,9 @@ export function OvertimeApproval() {
 
     if (clockOutTime > shiftEnd) {
       const overtime = (clockOutTime.getTime() - Math.max(shiftEnd.getTime(), clockInTime.getTime())) / (1000 * 60 * 60);
-      return Math.max(0, overtime - 0.5).toFixed(1); // Subtract 30 minutes grace period
+      return Math.max(0, overtime - 0.5).toFixed(2); // Subtract 30 minutes grace period
     }
-    return '0.0';
+    return '0.00';
   };
 
   return (

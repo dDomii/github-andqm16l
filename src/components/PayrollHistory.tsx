@@ -32,7 +32,7 @@ export function PayrollHistory() {
   const fetchPayrollHistory = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:3001/api/user-payroll-history?year=${selectedYear}`, {
+      const response = await fetch(`http://192.168.100.60:3001/api/user-payroll-history?year=${selectedYear}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -44,7 +44,7 @@ export function PayrollHistory() {
   };
 
   const formatCurrency = (amount: number) => {
-    return `₱${amount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `₱${amount.toFixed(2)}`;
   };
 
   const formatDate = (dateString: string) => {

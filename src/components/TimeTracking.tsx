@@ -30,7 +30,7 @@ export function TimeTracking() {
 
   const fetchTodayEntry = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/today-entry', {
+      const response = await fetch('http://192.168.100.60:3001/api/today-entry', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -43,7 +43,7 @@ export function TimeTracking() {
   const handleClockIn = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:3001/api/clock-in', {
+      const response = await fetch('http://192.168.100.60:3001/api/clock-in', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -84,7 +84,7 @@ export function TimeTracking() {
   const performClockOut = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:3001/api/clock-out', {
+      const response = await fetch('http://192.168.100.60:3001/api/clock-out', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
