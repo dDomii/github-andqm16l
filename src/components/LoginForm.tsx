@@ -35,7 +35,7 @@ export function LoginForm() {
             />
           </div>
           <h1 className="text-2xl font-bold text-white mb-2">Welcome Back</h1>
-          <p className="text-slate-400">The Backroom - OJT Daily Time Record</p>
+          <p className="text-slate-400">Wither - OJT Daily Time Record</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
