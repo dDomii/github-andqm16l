@@ -34,6 +34,7 @@ export function TimeTracking() {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
+      console.log('Today entry data:', data); // Debug log
       setTodayEntry(data);
     } catch (error) {
       console.error('Error fetching today entry:', error);
@@ -50,7 +51,7 @@ export function TimeTracking() {
       const data = await response.json();
       
       if (data.success) {
-        fetchTodayEntry();
+        await fetchTodayEntry();
       } else {
         alert(data.message || 'Failed to clock in');
       }
@@ -95,7 +96,7 @@ export function TimeTracking() {
       const data = await response.json();
       
       if (data.success) {
-        fetchTodayEntry();
+        await fetchTodayEntry();
         setShowOvertimeModal(false);
         setOvertimeNote('');
         
@@ -358,7 +359,7 @@ export function TimeTracking() {
                       </button>
                     )}
                     
-                    {todayEntry && !todayEntry.clock_out && (
+                    {todayEntry && todayEntry.clock_in && !todayEntry.clock_out && (
                       <button
                         onClick={handleClockOut}
                         disabled={isLoading}
@@ -369,11 +370,22 @@ export function TimeTracking() {
                       </button>
                     )}
 
-                    {todayEntry && todayEntry.clock_out && (
+                    {todayEntry && todayEntry.clock_in && todayEntry.clock_out && (
                       <div className="bg-slate-700/50 p-4 rounded-xl text-center border border-slate-600/50">
                         <p className="text-slate-300">You have completed your shift for today.</p>
                       </div>
                     )}
+
+                    {/* Debug info - remove in production */}
+                    <div className="mt-4 p-2 bg-slate-700/30 rounded text-xs text-slate-400">
+                      <p>Debug: todayEntry = {todayEntry ? 'exists' : 'null'}</p>
+                      {todayEntry && (
+                        <>
+                          <p>Clock In: {todayEntry.clock_in ? 'yes' : 'no'}</p>
+                          <p>Clock Out: {todayEntry.clock_out ? 'yes' : 'no'}</p>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
 
