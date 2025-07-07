@@ -38,7 +38,7 @@ export function LiveReports() {
 
   const fetchActiveUsers = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/active-users', {
+      const response = await fetch('http://192.168.100.60:3001/api/active-users', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -166,7 +166,7 @@ export function LiveReports() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-400">Total Hours</p>
-              <p className="text-2xl font-bold text-blue-400">{totalHoursWorked.toFixed(1)}h</p>
+              <p className="text-2xl font-bold text-blue-400">{totalHoursWorked.toFixed(2)}h</p>
             </div>
             <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/20 p-3 rounded-lg">
               <Calendar className="w-6 h-6 text-blue-400" />
@@ -178,7 +178,7 @@ export function LiveReports() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-400">Estimated Pay</p>
-              <p className="text-2xl font-bold text-purple-400">₱{(totalHoursWorked * 25).toFixed(0)}</p>
+              <p className="text-2xl font-bold text-purple-400">₱{(totalHoursWorked * 25).toFixed(2)}</p>
             </div>
             <div className="bg-gradient-to-br from-purple-500/20 to-purple-600/20 p-3 rounded-lg">
               <span className="text-purple-400 font-bold text-lg">₱</span>
@@ -271,7 +271,7 @@ export function LiveReports() {
                                 <div className="text-center">
                                   <p className="text-sm text-slate-400">Est. Pay</p>
                                   <p className="font-semibold text-purple-400">
-                                    ₱{((currentTime.hours + (currentTime.minutes / 60) + (currentTime.seconds / 3600)) * 25).toFixed(0)}
+                                    ₱{((currentTime.hours + (currentTime.minutes / 60) + (currentTime.seconds / 3600)) * 25).toFixed(2)}
                                   </p>
                                 </div>
                               </div>

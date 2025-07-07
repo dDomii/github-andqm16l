@@ -52,7 +52,7 @@ export function UserManagement() {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/users', {
+      const response = await fetch('http://192.168.100.60:3001/api/users', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -67,8 +67,8 @@ export function UserManagement() {
     
     try {
       const url = editingUser 
-        ? `http://localhost:3001/api/users/${editingUser.id}`
-        : 'http://localhost:3001/api/users';
+        ? `http://192.168.100.60:3001/api/users/${editingUser.id}`
+        : 'http://192.168.100.60:3001/api/users';
       
       const method = editingUser ? 'PUT' : 'POST';
       
@@ -102,7 +102,7 @@ export function UserManagement() {
     if (!selectedUserId) return;
 
     try {
-      const response = await fetch(`http://localhost:3001/api/users/${selectedUserId}/adjust-time`, {
+      const response = await fetch(`http://192.168.100.60:3001/api/users/${selectedUserId}/adjust-time`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -134,7 +134,7 @@ export function UserManagement() {
     if (!deletingUser) return;
 
     try {
-      const response = await fetch(`http://localhost:3001/api/users/${deletingUser.id}`, {
+      const response = await fetch(`http://192.168.100.60:3001/api/users/${deletingUser.id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,
