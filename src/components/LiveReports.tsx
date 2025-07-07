@@ -127,61 +127,61 @@ export function LiveReports() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Live Reports</h2>
-          <p className="text-gray-600">Real-time tracking of active employees by department</p>
+          <h2 className="text-2xl font-bold text-white">Live Reports</h2>
+          <p className="text-slate-400">Real-time tracking of active employees by department</p>
         </div>
         <div className="text-right">
-          <p className="text-sm text-gray-500">Last updated</p>
-          <p className="text-lg font-semibold text-gray-900">{formatCurrentTime()}</p>
+          <p className="text-sm text-slate-400">Last updated</p>
+          <p className="text-lg font-semibold text-white">{formatCurrentTime()}</p>
         </div>
       </div>
 
       {/* Summary Cards */}
       <div className="grid md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-green-200">
+        <div className="bg-slate-800/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-slate-700/50">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Currently Active</p>
-              <p className="text-2xl font-bold text-green-600">{totalActiveUsers}</p>
+              <p className="text-sm text-slate-400">Currently Active</p>
+              <p className="text-2xl font-bold text-emerald-400">{totalActiveUsers}</p>
             </div>
-            <div className="bg-green-100 p-3 rounded-lg">
-              <Activity className="w-6 h-6 text-green-600" />
+            <div className="bg-gradient-to-br from-emerald-500/20 to-green-600/20 p-3 rounded-lg">
+              <Activity className="w-6 h-6 text-emerald-400" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-orange-200">
+        <div className="bg-slate-800/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-slate-700/50">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">In Overtime</p>
-              <p className="text-2xl font-bold text-orange-600">{usersInOvertime}</p>
+              <p className="text-sm text-slate-400">In Overtime</p>
+              <p className="text-2xl font-bold text-orange-400">{usersInOvertime}</p>
             </div>
-            <div className="bg-orange-100 p-3 rounded-lg">
-              <Clock className="w-6 h-6 text-orange-600" />
+            <div className="bg-gradient-to-br from-orange-500/20 to-orange-600/20 p-3 rounded-lg">
+              <Clock className="w-6 h-6 text-orange-400" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-blue-200">
+        <div className="bg-slate-800/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-slate-700/50">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Total Hours</p>
-              <p className="text-2xl font-bold text-blue-600">{totalHoursWorked.toFixed(1)}h</p>
+              <p className="text-sm text-slate-400">Total Hours</p>
+              <p className="text-2xl font-bold text-blue-400">{totalHoursWorked.toFixed(1)}h</p>
             </div>
-            <div className="bg-blue-100 p-3 rounded-lg">
-              <Calendar className="w-6 h-6 text-blue-600" />
+            <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/20 p-3 rounded-lg">
+              <Calendar className="w-6 h-6 text-blue-400" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-purple-200">
+        <div className="bg-slate-800/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-slate-700/50">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Estimated Pay</p>
-              <p className="text-2xl font-bold text-purple-600">₱{(totalHoursWorked * 25).toFixed(0)}</p>
+              <p className="text-sm text-slate-400">Estimated Pay</p>
+              <p className="text-2xl font-bold text-purple-400">₱{(totalHoursWorked * 25).toFixed(0)}</p>
             </div>
-            <div className="bg-purple-100 p-3 rounded-lg">
-              <span className="text-purple-600 font-bold text-lg">₱</span>
+            <div className="bg-gradient-to-br from-purple-500/20 to-purple-600/20 p-3 rounded-lg">
+              <span className="text-purple-400 font-bold text-lg">₱</span>
             </div>
           </div>
         </div>
@@ -198,77 +198,79 @@ export function LiveReports() {
             const deptOvertimeUsers = deptUsers.filter(user => isOvertimeHours(user.clock_in)).length;
 
             return (
-              <div key={department} className="bg-white rounded-xl shadow-sm overflow-hidden">
+              <div key={department} className="bg-slate-800/90 backdrop-blur-sm rounded-xl shadow-lg overflow-hidden border border-slate-700/50">
                 <button
                   onClick={() => toggleDepartment(department)}
-                  className="w-full px-6 py-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between hover:bg-gray-100 transition-colors"
+                  className="w-full px-6 py-4 bg-slate-700/50 border-b border-slate-600/50 flex items-center justify-between hover:bg-slate-600/50 transition-all duration-200"
                 >
                   <div className="flex items-center gap-3">
-                    <MapPin className="w-5 h-5 text-gray-600" />
-                    <h3 className="text-lg font-semibold text-gray-900">{department}</h3>
-                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-medium">
+                    <div className="bg-gradient-to-br from-emerald-500/20 to-green-600/20 p-2 rounded-lg">
+                      <MapPin className="w-5 h-5 text-emerald-400" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-white">{department}</h3>
+                    <span className="bg-blue-900/20 text-blue-400 px-2 py-1 rounded-full text-sm font-medium border border-blue-800/50">
                       {deptUsers.length} active
                     </span>
                     {deptOvertimeUsers > 0 && (
-                      <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-sm font-medium">
+                      <span className="bg-orange-900/20 text-orange-400 px-2 py-1 rounded-full text-sm font-medium border border-orange-800/50">
                         {deptOvertimeUsers} overtime
                       </span>
                     )}
                   </div>
                   {isExpanded ? (
-                    <ChevronUp className="w-5 h-5 text-gray-600" />
+                    <ChevronUp className="w-5 h-5 text-slate-400" />
                   ) : (
-                    <ChevronDown className="w-5 h-5 text-gray-600" />
+                    <ChevronDown className="w-5 h-5 text-slate-400" />
                   )}
                 </button>
 
                 {isExpanded && (
-                  <div className="divide-y divide-gray-100">
+                  <div className="divide-y divide-slate-700/50">
                     {deptUsers.map((user) => {
                       const currentTime = calculateCurrentTime(user.clock_in);
                       const inOvertime = isOvertimeHours(user.clock_in);
                       const overtimeTime = getOvertimeTime(user.clock_in);
                       
                       return (
-                        <div key={user.id} className="p-6 hover:bg-gray-50 transition-colors">
+                        <div key={user.id} className="p-6 hover:bg-slate-700/30 transition-colors">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                              <div className={`p-3 rounded-lg ${inOvertime ? 'bg-orange-100' : 'bg-green-100'}`}>
-                                <User className={`w-5 h-5 ${inOvertime ? 'text-orange-600' : 'text-green-600'}`} />
+                              <div className={`p-3 rounded-lg ${inOvertime ? 'bg-gradient-to-br from-orange-500/20 to-orange-600/20' : 'bg-gradient-to-br from-emerald-500/20 to-green-600/20'}`}>
+                                <User className={`w-5 h-5 ${inOvertime ? 'text-orange-400' : 'text-emerald-400'}`} />
                               </div>
                               <div>
-                                <h4 className="font-semibold text-gray-900">{user.username}</h4>
-                                <p className="text-sm text-gray-500">Employee ID: {user.id}</p>
+                                <h4 className="font-semibold text-white">{user.username}</h4>
+                                <p className="text-sm text-slate-400">Employee ID: {user.id}</p>
                               </div>
                             </div>
                             
                             <div className="text-right">
                               <div className="flex items-center gap-6">
                                 <div className="text-center">
-                                  <p className="text-sm text-gray-500">Clock In</p>
-                                  <p className="font-semibold text-gray-900">{formatTime(user.clock_in)}</p>
+                                  <p className="text-sm text-slate-400">Clock In</p>
+                                  <p className="font-semibold text-white">{formatTime(user.clock_in)}</p>
                                 </div>
                                 
                                 <div className="text-center">
-                                  <p className="text-sm text-gray-500">Time Worked</p>
-                                  <p className="font-semibold text-blue-600">{formatTimeDisplay(currentTime)}</p>
+                                  <p className="text-sm text-slate-400">Time Worked</p>
+                                  <p className="font-semibold text-blue-400">{formatTimeDisplay(currentTime)}</p>
                                 </div>
                                 
                                 <div className="text-center">
-                                  <p className="text-sm text-gray-500">Status</p>
+                                  <p className="text-sm text-slate-400">Status</p>
                                   {inOvertime ? (
                                     <div>
-                                      <p className="font-semibold text-orange-600">Overtime</p>
+                                      <p className="font-semibold text-orange-400">Overtime</p>
                                       <p className="text-xs text-orange-500">{formatTimeDisplay(overtimeTime)}</p>
                                     </div>
                                   ) : (
-                                    <p className="font-semibold text-green-600">Regular</p>
+                                    <p className="font-semibold text-emerald-400">Regular</p>
                                   )}
                                 </div>
                                 
                                 <div className="text-center">
-                                  <p className="text-sm text-gray-500">Est. Pay</p>
-                                  <p className="font-semibold text-purple-600">
+                                  <p className="text-sm text-slate-400">Est. Pay</p>
+                                  <p className="font-semibold text-purple-400">
                                     ₱{((currentTime.hours + (currentTime.minutes / 60) + (currentTime.seconds / 3600)) * 25).toFixed(0)}
                                   </p>
                                 </div>
@@ -277,8 +279,8 @@ export function LiveReports() {
                           </div>
                           
                           {inOvertime && (
-                            <div className="mt-3 bg-orange-50 p-3 rounded-lg border border-orange-200">
-                              <p className="text-sm text-orange-800">
+                            <div className="mt-3 bg-orange-900/20 p-3 rounded-lg border border-orange-800/50">
+                              <p className="text-sm text-orange-400">
                                 <strong>Overtime Alert:</strong> This employee has been working for {formatTimeDisplay(overtimeTime)} past shift hours.
                               </p>
                             </div>
@@ -294,9 +296,11 @@ export function LiveReports() {
         </div>
       ) : (
         <div className="text-center py-12">
-          <Activity className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Active Users</h3>
-          <p className="text-gray-500">No employees are currently clocked in.</p>
+          <div className="bg-slate-700/30 p-4 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+            <Activity className="w-10 h-10 text-slate-500" />
+          </div>
+          <h3 className="text-lg font-medium text-white mb-2">No Active Users</h3>
+          <p className="text-slate-400">No employees are currently clocked in.</p>
         </div>
       )}
     </div>
