@@ -10,13 +10,13 @@ export function Layout({ children }: LayoutProps) {
   const { user, logout } = useAuth();
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-emerald-900">
       {/* Header */}
-      <header className="bg-gray-800 shadow-lg border-b border-gray-700">
+      <header className="bg-slate-800/90 backdrop-blur-sm shadow-lg border-b border-slate-700/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-3">
-              <div className="bg-none p-2 rounded-lg">
+              <div className="bg-gradient-to-br from-emerald-400 to-green-500 p-2 rounded-lg shadow-lg">
                 <img 
                   src="https://thebackroomop.com/hs-fs/hubfs/The%20Back%20Room%20Logo%20WHT_optimised.png?width=100&height=94&name=The%20Back%20Room%20Logo%20WHT_optimised.png" 
                   alt="The Backroom Logo" 
@@ -25,28 +25,28 @@ export function Layout({ children }: LayoutProps) {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-white">The Backroom</h1>
-                <p className="text-sm text-gray-300">OJT Daily Time Record</p>
+                <p className="text-sm text-slate-300">OJT Daily Time Record</p>
               </div>
             </div>
 
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-3">
-                <div className="bg-gray-700 p-2 rounded-lg">
+                <div className="bg-slate-700/50 p-2 rounded-lg">
                   {user?.role === 'admin' ? (
-                    <Settings className="w-5 h-5 text-gray-300" />
+                    <Settings className="w-5 h-5 text-emerald-400" />
                   ) : (
-                    <User className="w-5 h-5 text-gray-300" />
+                    <User className="w-5 h-5 text-slate-300" />
                   )}
                 </div>
                 <div>
                   <p className="text-sm font-medium text-white">{user?.username}</p>
-                  <p className="text-xs text-gray-400">{user?.department}</p>
+                  <p className="text-xs text-slate-400">{user?.department}</p>
                 </div>
               </div>
               
               <button
                 onClick={logout}
-                className="flex items-center gap-2 px-3 py-2 text-gray-300 hover:text-red-400 hover:bg-gray-700 rounded-lg transition-colors"
+                className="flex items-center gap-2 px-3 py-2 text-slate-300 hover:text-red-400 hover:bg-slate-700/50 rounded-lg transition-all duration-200"
               >
                 <LogOut className="w-4 h-4" />
                 <span className="text-sm font-medium">Logout</span>
