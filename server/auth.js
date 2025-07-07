@@ -96,3 +96,37 @@ export async function updateUser(userId, userData) {
     return { success: false, message: 'Server error' };
   }
 }
+
+export async function deleteUser(userId) {
+  try {
+    // Check if user has any time entries or payslips
+    const [timeEntries] = await pool.execute(
+      'SELECT COUNT(*) as count FROM time_entries WHERE user_id = ?',
+      [userId]
+    );
+
+    const [payslips] = await pool.execute(
+      'SELECT COUNT(*) as count FROM payslips WHERE user_id = ?',
+      [userId]
+    );
+
+    if (timeEntries[0].count > 0 || payslips[0].count > 0) {
+      // If user has records, just deactivate instead of deleting
+      await pool.execute(
+        'UPDATE users SET active = FALSE WHERE id = ?',
+        [userId]
+      );
+      return { success: true, message: 'User deactivated (has existing records)' };
+    } else {
+      // If no records, safe to delete
+      await pool.execute(
+        'DELETE FROM users WHERE id = ?',
+        [userId]
+      );
+      return { success: true, message: 'User deleted successfully' };
+    }
+  } catch (error) {
+    console.error('Delete user error:', error);
+    return { success: false, message: 'Server error' };
+  }
+}

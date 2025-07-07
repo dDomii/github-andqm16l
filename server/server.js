@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { initializeDatabase } from './database.js';
-import { loginUser, verifyToken, createUser, updateUser } from './auth.js';
+import { loginUser, verifyToken, createUser, updateUser, deleteUser } from './auth.js';
 import { clockIn, clockOut, getTodayEntry, getOvertimeRequests, approveOvertime } from './timeTracking.js';
 import { generateWeeklyPayslips, getPayrollReport, updatePayrollEntry } from './payroll.js';
 import { pool } from './database.js';
@@ -63,6 +63,23 @@ app.get('/api/today-entry', authenticate, async (req, res) => {
   res.json(entry);
 });
 
+app.get('/api/user-payroll-history', authenticate, async (req, res) => {
+  const { year } = req.query;
+  
+  try {
+    const [payslips] = await pool.execute(
+      `SELECT * FROM payslips 
+       WHERE user_id = ? AND YEAR(week_start) = ?
+       ORDER BY week_start DESC`,
+      [req.user.userId, year || new Date().getFullYear()]
+    );
+    res.json(payslips);
+  } catch (error) {
+    console.error('Error fetching user payroll history:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 app.get('/api/users', authenticate, async (req, res) => {
   if (req.user.role !== 'admin') {
     return res.status(403).json({ message: 'Admin access required' });
@@ -93,6 +110,15 @@ app.put('/api/users/:id', authenticate, async (req, res) => {
   }
 
   const result = await updateUser(req.params.id, req.body);
+  res.json(result);
+});
+
+app.delete('/api/users/:id', authenticate, async (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Admin access required' });
+  }
+
+  const result = await deleteUser(req.params.id);
   res.json(result);
 });
 
