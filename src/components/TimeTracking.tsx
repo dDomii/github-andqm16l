@@ -378,16 +378,8 @@ export function TimeTracking() {
                       </div>
                     )}
 
-                    {/* Debug info - remove in production */}
-                    <div className="mt-4 p-2 bg-slate-700/30 rounded text-xs text-slate-400">
-                      <p>Debug: todayEntry = {todayEntry ? 'exists' : 'null'}</p>
-                      {todayEntry && (
-                        <>
-                          <p>Clock In: {todayEntry.clock_in ? 'yes' : 'no'}</p>
-                          <p>Clock Out: {todayEntry.clock_out ? 'yes' : 'no'}</p>
-                        </>
-                      )}
-                    </div>
+                   
+                    
                   </div>
                 </div>
 
