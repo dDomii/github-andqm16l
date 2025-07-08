@@ -57,7 +57,7 @@ export function AdminDashboard() {
   const tabs = [
     { id: 'users', label: 'User Management', icon: Users },
     { id: 'overtime', label: 'Overtime Approval', icon: Clock },
-    { id: 'payroll', label: 'Payroll', icon: DollarSign },
+    { id: 'payroll', label: 'Payroll', icon: PhilippinePeso },
     { id: 'live-reports', label: 'Live Reports', icon: Activity }
   ];
 
