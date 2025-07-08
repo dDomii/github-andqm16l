@@ -75,9 +75,9 @@ export async function calculateWeeklyPayroll(userId, weekStart) {
 
     // Calculate based on 8.5 hours per day (including 30-minute break)
     const requiredWeeklyHours = 42.5; // 8.5 hours × 5 days
-    const baseSalary = Math.min(totalHours, requiredWeeklyHours) * 25; // 212.5 PHP / 8.5 hours = 25 PHP/hour
+    const baseSalary = Math.min(totalHours, requiredWeeklyHours) * 23.53; // 200 PHP / 8.5 hours = 23.53 PHP/hour
     const overtimePay = overtimeHours * 35;
-    const undertimeDeduction = undertimeHours * 25;
+    const undertimeDeduction = undertimeHours * 23.53;
     const staffHouseDeduction = userData.staff_house ? 250 : 0;
     
     const totalSalary = baseSalary + overtimePay - undertimeDeduction - staffHouseDeduction;
@@ -313,9 +313,9 @@ export async function calculatePayrollForSpecificDays(userId, selectedDates) {
 
     // Calculate based on selected days (8.5 hours per day including break)
     const expectedHours = selectedDates.length * 8.5;
-    const baseSalary = Math.min(totalHours, expectedHours) * 25; // 212.5 PHP / 8.5 hours = 25 PHP/hour
+    const baseSalary = Math.min(totalHours, expectedHours) * 23.53; // 200 PHP / 8.5 hours = 23.53 PHP/hour
     const overtimePay = overtimeHours * 35;
-    const undertimeDeduction = undertimeHours * 25;
+    const undertimeDeduction = undertimeHours * 23.53;
     const staffHouseDeduction = userData.staff_house ? (250 * selectedDates.length / 5) : 0; // Prorated based on days
     
     const totalSalary = baseSalary + overtimePay - undertimeDeduction - staffHouseDeduction;
@@ -415,9 +415,9 @@ export async function calculatePayrollForDateRange(userId, startDate, endDate) {
     const end = new Date(endDate);
     const daysDiff = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
     
-    const baseSalary = Math.min(totalHours, daysDiff * 8.5) * 25; // 212.5 PHP / 8.5 hours = 25 PHP/hour
+    const baseSalary = Math.min(totalHours, daysDiff * 8.5) * 23.53; // 200 PHP / 8.5 hours = 23.53 PHP/hour
     const overtimePay = overtimeHours * 35;
-    const undertimeDeduction = undertimeHours * 25;
+    const undertimeDeduction = undertimeHours * 23.53;
     const staffHouseDeduction = userData.staff_house ? (250 * daysDiff / 5) : 0; // Prorated
     
     const totalSalary = baseSalary + overtimePay - undertimeDeduction - staffHouseDeduction;

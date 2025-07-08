@@ -397,7 +397,7 @@ export function TimeTracking() {
                     </div>
                     <div>
                       <span className="text-slate-400">Late Policy:</span>
-                      <p className="font-semibold text-white">After 7:00 AM (-₱25/hour)</p>
+                      <p className="font-semibold text-white">After 7:00 AM (-₱23.53/hour)</p>
                     </div>
                     <div>
                       <span className="text-slate-400">Staff House:</span>
@@ -415,7 +415,7 @@ export function TimeTracking() {
                   </div>
                   <div className="mt-4 pt-4 border-t border-slate-600/50">
                     <p className="text-xs text-slate-500">
-                      <strong>Note:</strong> Regular shift is 8.5 hours (including 30-minute break). Late clock-in (after 7:00 AM) incurs deductions. Early clock-out is no longer penalized.
+                      <strong>Note:</strong> Regular shift is 8.5 hours (including 30-minute break) = ₱200/day. Late clock-in (after 7:00 AM) incurs deductions. Early clock-out is no longer penalized.
                     </p>
                   </div>
                 </div>

@@ -181,7 +181,7 @@ export function LiveReports() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-400">Estimated Pay</p>
-              <p className="text-2xl font-bold text-purple-400">₱{(totalHoursWorked * 25).toFixed(2)}</p>
+              <p className="text-2xl font-bold text-purple-400">₱{(totalHoursWorked * 23.53).toFixed(2)}</p>
             </div>
             <div className="bg-gradient-to-br from-purple-500/20 to-purple-600/20 p-3 rounded-lg">
               <span className="text-purple-400 font-bold text-lg">₱</span>
