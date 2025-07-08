@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import { initializeDatabase } from './database.js';
 import { loginUser, verifyToken, createUser, updateUser, deleteUser } from './auth.js';
 import { clockIn, clockOut, getTodayEntry, getOvertimeRequests, approveOvertime } from './timeTracking.js';
-import { generateWeeklyPayslips, getPayrollReport, updatePayrollEntry } from './payroll.js';
+import { generateWeeklyPayslips, generatePayslipsForDateRange, getPayrollReport, updatePayrollEntry } from './payroll.js';
 import { pool } from './database.js';
 
 // Load environment variables

@@ -299,7 +299,7 @@ export function UserManagement() {
       </div>
 
       {/* Department-wise User Lists */}
-      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {DEPARTMENTS.map((department) => {
           const deptUsers = groupedUsers[department];
           const colors = DEPARTMENT_COLORS[department];
@@ -310,21 +310,21 @@ export function UserManagement() {
             <div key={department} className={`${colors.bg} backdrop-blur-sm rounded-xl shadow-lg overflow-hidden border ${colors.border} h-fit`}>
               <button
                 onClick={() => toggleDepartment(department)}
-                className={`w-full px-4 py-3 bg-gradient-to-r ${colors.accent} border-b ${colors.border} flex items-center justify-between hover:opacity-80 transition-all duration-200`}
+                className={`w-full px-3 py-2.5 bg-gradient-to-r ${colors.accent} border-b ${colors.border} flex items-center justify-between hover:opacity-80 transition-all duration-200`}
               >
                 <div className="flex items-center gap-3">
-                  <div className={`bg-gradient-to-br ${colors.accent} p-1.5 rounded-lg border ${colors.border}`}>
+                  <div className={`bg-gradient-to-br ${colors.accent} p-1 rounded-lg border ${colors.border}`}>
                     <User className={`w-4 h-4 ${colors.icon}`} />
                   </div>
                   <div className="text-left">
-                    <h3 className={`text-base font-semibold ${colors.text}`}>{department}</h3>
+                    <h3 className={`text-sm font-semibold ${colors.text}`}>{department}</h3>
                     <p className="text-xs text-slate-400">
                       {deptUsers.length} total • {activeCount} active
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium border ${colors.border} ${colors.text}`}>
+                  <span className={`px-1.5 py-0.5 rounded-full text-xs font-medium border ${colors.border} ${colors.text}`}>
                     {deptUsers.length} users
                   </span>
                   {isExpanded ? (
@@ -336,38 +336,38 @@ export function UserManagement() {
               </button>
 
               {isExpanded && (
-                <div className="divide-y divide-slate-700/30 max-h-96 overflow-y-auto">
+                <div className="divide-y divide-slate-700/30 max-h-80 overflow-y-auto">
                   {deptUsers.length > 0 ? (
                     deptUsers.map((user) => (
-                      <div key={user.id} className="p-4 hover:bg-slate-700/20 transition-colors">
+                      <div key={user.id} className="p-3 hover:bg-slate-700/20 transition-colors">
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex items-start gap-3 flex-1 min-w-0">
-                            <div className={`bg-gradient-to-br ${colors.accent} p-2 rounded-lg border ${colors.border} flex-shrink-0`}>
+                            <div className={`bg-gradient-to-br ${colors.accent} p-1.5 rounded-lg border ${colors.border} flex-shrink-0`}>
                               {user.role === 'admin' ? (
-                                <Shield className={`w-4 h-4 ${colors.icon}`} />
+                                <Shield className={`w-3.5 h-3.5 ${colors.icon}`} />
                               ) : (
-                                <User className={`w-4 h-4 ${colors.icon}`} />
+                                <User className={`w-3.5 h-3.5 ${colors.icon}`} />
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h4 className="font-medium text-white truncate">{user.username}</h4>
+                              <h4 className="font-medium text-white text-sm truncate">{user.username}</h4>
                               <div className="flex flex-wrap gap-1 mt-1">
                                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                                   user.role === 'admin' 
-                                    ? 'bg-emerald-900/20 text-emerald-400 border border-emerald-800/50' 
-                                    : 'bg-blue-900/20 text-blue-400 border border-blue-800/50'
+                                    ? 'bg-emerald-900/20 text-emerald-400' 
+                                    : 'bg-blue-900/20 text-blue-400'
                                 }`}>
                                   {user.role}
                                 </span>
                                 {user.staff_house && (
-                                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-900/20 text-purple-400 border border-purple-800/50">
+                                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-900/20 text-purple-400">
                                     Staff House
                                   </span>
                                 )}
                                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                                   user.active 
-                                    ? 'bg-emerald-900/20 text-emerald-400 border border-emerald-800/50' 
-                                    : 'bg-red-900/20 text-red-400 border border-red-800/50'
+                                    ? 'bg-emerald-900/20 text-emerald-400' 
+                                    : 'bg-red-900/20 text-red-400'
                                 }`}>
                                   {user.active ? 'Active' : 'Inactive'}
                                 </span>
@@ -405,9 +405,9 @@ export function UserManagement() {
                       </div>
                     ))
                   ) : (
-                    <div className="p-6 text-center">
-                      <div className={`bg-gradient-to-br ${colors.accent} p-3 rounded-full w-12 h-12 mx-auto mb-3 flex items-center justify-center border ${colors.border}`}>
-                        <User className={`w-6 h-6 ${colors.icon}`} />
+                    <div className="p-4 text-center">
+                      <div className={`bg-gradient-to-br ${colors.accent} p-2 rounded-full w-8 h-8 mx-auto mb-2 flex items-center justify-center border ${colors.border}`}>
+                        <User className={`w-4 h-4 ${colors.icon}`} />
                       </div>
                       <h3 className="text-sm font-medium text-white mb-1">No Users</h3>
                       <p className="text-xs text-slate-400">No users in this department.</p>
