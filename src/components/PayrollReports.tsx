@@ -85,7 +85,7 @@ export function PayrollReports() {
         if (data.error) {
           setError(data.error);
         } else {
-          fetchPayrollReport();
+          await fetchPayrollReport();
           setActiveTab('preview');
         }
       } else {

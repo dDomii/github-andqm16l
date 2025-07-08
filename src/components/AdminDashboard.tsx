@@ -122,8 +122,8 @@ export function AdminDashboard() {
       {/* Tabs */}
       <div className="bg-slate-800/90 backdrop-blur-sm rounded-xl shadow-lg border border-slate-700/50">
         <div className="border-b border-slate-700/50">
-          <nav className="flex justify-center" aria-label="Tabs">
-            <div className="bg-slate-700/30 p-1 rounded-xl m-4">
+          <nav className="flex justify-center p-6" aria-label="Tabs">
+            <div className="bg-slate-700/30 p-1 rounded-xl flex gap-2">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
