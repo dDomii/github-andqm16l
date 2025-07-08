@@ -59,6 +59,9 @@ export function PayrollReports() {
     const currentWeekEnd = getWeekEnd(today);
     setStartDate(currentWeekStart);
     setEndDate(currentWeekEnd);
+    // Initialize with current week dates
+    const weekDates = generateDateRange(currentWeekStart, currentWeekEnd);
+    setSelectedDates(weekDates);
     fetchUsers();
   }, []);
 
@@ -116,6 +119,8 @@ export function PayrollReports() {
         if (data.error) {
           setError(data.error);
         } else {
+          // Show success message
+          console.log('Payslips generated:', data);
           await fetchPayrollReport();
           setActiveTab('preview');
         }
@@ -132,6 +137,7 @@ export function PayrollReports() {
   const fetchPayrollReport = async () => {
     if (selectedDates.length === 0) return;
     
+    setLoading(true);
     try {
       let url = 'http://192.168.100.60:3001/api/payroll-report';
       // For specific dates, pass them as a comma-separated string
@@ -141,10 +147,13 @@ export function PayrollReports() {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
+      console.log('Payroll report data:', data);
       setPayrollData(data);
     } catch (error) {
       console.error('Error fetching payroll report:', error);
+      setError('Failed to fetch payroll report');
     }
+    setLoading(false);
   };
 
   const handleEdit = (entry: PayrollEntry) => {
@@ -374,19 +383,12 @@ export function PayrollReports() {
           {/* Generation Mode Selection */}
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-white mb-4">Generation Mode</h3>
-            <div className="flex justify-center">
-              <button
-                onClick={() => setGenerationMode('specific')}
-                className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-3 rounded-lg font-medium shadow-lg"
-              >
-                Specific Days
-              </button>
-            </div>
+            <p className="text-slate-400 text-center">Select specific working days to generate payslips</p>
           </div>
 
-          {generationMode === 'specific' && (
+          <div className="space-y-6">
+            {/* Date Selection */}
             <div className="space-y-6">
-              {/* Date Selection */}
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
                   Select Specific Days
@@ -538,7 +540,7 @@ export function PayrollReports() {
                 </button>
               </div>
             </div>
-          )}
+          </div>
 
           {error && (
             <div className="mt-4 flex items-center gap-2 text-red-400 bg-red-900/20 p-3 rounded-lg border border-red-800/50">
@@ -803,13 +805,30 @@ export function PayrollReports() {
                 );
               })}
             </div>
+          ) : loading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400 mx-auto mb-4"></div>
+              <p className="text-slate-400">Loading payroll data...</p>
+            </div>
           ) : (
             <div className="text-center py-12">
               <div className="bg-slate-700/30 p-4 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
                 <PhilippinePeso className="w-10 h-10 text-slate-500" />
               </div>
               <h3 className="text-lg font-medium text-white mb-2">No Payroll Data</h3>
-              <p className="text-slate-400">Generate payslips to view preview.</p>
+              <p className="text-slate-400">
+                {selectedDates.length === 0 
+                  ? 'Select dates and generate payslips to view preview.' 
+                  : 'No payroll data found for selected dates. Try generating payslips first.'}
+              </p>
+              {selectedDates.length > 0 && (
+                <button
+                  onClick={generatePayslips}
+                  className="mt-4 bg-gradient-to-r from-emerald-500 to-green-600 text-white px-6 py-2 rounded-lg font-medium hover:from-emerald-600 hover:to-green-700 transition-all duration-200"
+                >
+                  Generate Payslips
+                </button>
+              )}
             </div>
           )}
         </>

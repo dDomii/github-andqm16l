@@ -366,22 +366,23 @@ export function TimeTracking() {
                       </button>
                     )}
 
-                    {todayEntry && todayEntry.clock_in && todayEntry.clock_out && (
-                      <div className="space-y-4">
+                    {/* Always show overtime request button */}
+                    <div className="space-y-4">
+                      {todayEntry && todayEntry.clock_in && todayEntry.clock_out && (
                         <div className="bg-slate-700/50 p-4 rounded-xl text-center border border-slate-600/50">
                           <p className="text-slate-300">You have completed your shift for today.</p>
                         </div>
-                        
-                        {/* Manual Overtime Request Button */}
-                        <button
-                          onClick={() => setShowOvertimeModal(true)}
-                          className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 px-6 rounded-xl font-medium hover:from-orange-600 hover:to-orange-700 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-slate-800 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg"
-                        >
-                          <Clock className="w-5 h-5" />
-                          Request Overtime
-                        </button>
-                      </div>
-                    )}
+                      )}
+                      
+                      {/* Manual Overtime Request Button - Always visible */}
+                      <button
+                        onClick={() => setShowOvertimeModal(true)}
+                        className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 px-6 rounded-xl font-medium hover:from-orange-600 hover:to-orange-700 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-slate-800 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg"
+                      >
+                        <Clock className="w-5 h-5" />
+                        Request Overtime
+                      </button>
+                    </div>
 
                    
                     
@@ -443,10 +444,13 @@ export function TimeTracking() {
             
             <div className="bg-orange-900/20 p-4 rounded-lg mb-4 border border-orange-800/50">
               <p className="text-sm text-orange-400 mb-2">
-                <strong>You're clocking out after shift hours.</strong>
+                <strong>Overtime Request</strong>
               </p>
               <p className="text-sm text-orange-300">
-                Current overtime: {formatTimeDisplay(overtimeTime)} past 4:00 PM
+                {isAfterShiftHours() 
+                  ? `Current overtime: ${formatTimeDisplay(overtimeTime)} past 4:00 PM`
+                  : 'You can request overtime for work done after 4:00 PM'
+                }
               </p>
             </div>
             
@@ -459,7 +463,7 @@ export function TimeTracking() {
                 onChange={(e) => setOvertimeNote(e.target.value)}
                 className="w-full p-3 bg-slate-700/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-white placeholder-slate-400"
                 rows={3}
-                placeholder="Please explain why you need to work overtime..."
+                placeholder="Please explain the reason for overtime work..."
                 required
               />
             </div>

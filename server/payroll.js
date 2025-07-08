@@ -494,6 +494,8 @@ export async function generateWeeklyPayslips(weekStart) {
 
 export async function getPayrollReport(startDate, endDate = null) {
   try {
+    console.log('Getting payroll report for:', startDate, endDate);
+    
     let query, params;
     
     if (endDate) {
@@ -514,11 +516,14 @@ export async function getPayrollReport(startDate, endDate = null) {
       params = [startDate];
     }
     
+    console.log('Executing query:', query, 'with params:', params);
+    
     const [payslips] = await pool.execute(
       query,
       params
     );
 
+    console.log('Found payslips:', payslips.length);
     return payslips;
   } catch (error) {
     console.error('Get payroll report error:', error);

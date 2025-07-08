@@ -222,11 +222,14 @@ app.get('/api/payroll-report', authenticate, async (req, res) => {
 
   const { weekStart, startDate, endDate, selectedDates } = req.query;
   
+  console.log('Payroll report request:', { weekStart, startDate, endDate, selectedDates });
+  
   let report;
   if (selectedDates) {
     // Handle specific dates - parse the comma-separated string
     const datesArray = selectedDates.split(',');
     const sortedDates = datesArray.sort();
+    console.log('Fetching report for dates:', sortedDates);
     report = await getPayrollReport(sortedDates[0], sortedDates[sortedDates.length - 1]);
   } else if (startDate && endDate) {
     report = await getPayrollReport(startDate, endDate);
@@ -236,6 +239,7 @@ app.get('/api/payroll-report', authenticate, async (req, res) => {
     return res.status(400).json({ message: 'Either weekStart, startDate/endDate, or selectedDates is required' });
   }
   
+  console.log('Payroll report result:', report.length, 'entries');
   res.json(report);
 });
 
