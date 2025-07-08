@@ -190,10 +190,10 @@ app.post('/api/payslips/generate', authenticate, async (req, res) => {
     return res.status(403).json({ message: 'Admin access required' });
   }
 
-  const { weekStart } = req.body;
+  const { startDate, endDate } = req.body;
   
   try {
-    const payslips = await generateWeeklyPayslips(weekStart);
+    const payslips = await generatePayslipsForDateRange(startDate, endDate);
     res.json(payslips);
   } catch (error) {
     console.error('Error generating payslips:', error);
@@ -206,8 +206,8 @@ app.get('/api/payroll-report', authenticate, async (req, res) => {
     return res.status(403).json({ message: 'Admin access required' });
   }
 
-  const { weekStart } = req.query;
-  const report = await getPayrollReport(weekStart);
+  const { startDate, endDate } = req.query;
+  const report = await getPayrollReport(startDate, endDate);
   res.json(report);
 });
 

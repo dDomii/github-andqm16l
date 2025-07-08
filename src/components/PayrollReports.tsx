@@ -331,7 +331,7 @@ export function PayrollReports() {
             </button>
             <button
               onClick={fetchPayrollReport}
-              disabled={!startDate}
+              disabled={!startDate || !endDate}
               className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 transition-all duration-200 flex items-center gap-2 shadow-lg"
             >
               <Eye className="w-4 h-4" />

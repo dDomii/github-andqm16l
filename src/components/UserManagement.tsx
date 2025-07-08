@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Plus, Edit2, User, Shield, Clock, Trash2 } from 'lucide-react';
+import { Plus, Edit2, User, Shield, Clock, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface User {
   id: number;
@@ -23,6 +23,65 @@ const DEPARTMENTS = [
   'IT Department'
 ];
 
+const DEPARTMENT_COLORS = {
+  'Human Resource': {
+    bg: 'bg-orange-100/10',
+    border: 'border-orange-300/30',
+    text: 'text-orange-300',
+    accent: 'from-orange-400/20 to-orange-500/20',
+    icon: 'text-orange-400'
+  },
+  'Marketing': {
+    bg: 'bg-gray-100/10',
+    border: 'border-gray-300/30',
+    text: 'text-gray-300',
+    accent: 'from-gray-400/20 to-gray-500/20',
+    icon: 'text-gray-400'
+  },
+  'Finance': {
+    bg: 'bg-sky-100/10',
+    border: 'border-sky-300/30',
+    text: 'text-sky-300',
+    accent: 'from-sky-400/20 to-sky-500/20',
+    icon: 'text-sky-400'
+  },
+  'Account Management': {
+    bg: 'bg-yellow-100/10',
+    border: 'border-yellow-300/30',
+    text: 'text-yellow-300',
+    accent: 'from-yellow-400/20 to-yellow-500/20',
+    icon: 'text-yellow-400'
+  },
+  'System Automation': {
+    bg: 'bg-green-100/10',
+    border: 'border-green-300/30',
+    text: 'text-green-300',
+    accent: 'from-green-400/20 to-green-500/20',
+    icon: 'text-green-400'
+  },
+  'Sales': {
+    bg: 'bg-pink-100/10',
+    border: 'border-pink-300/30',
+    text: 'text-pink-300',
+    accent: 'from-pink-400/20 to-pink-500/20',
+    icon: 'text-pink-400'
+  },
+  'Training': {
+    bg: 'bg-cyan-100/10',
+    border: 'border-cyan-300/30',
+    text: 'text-cyan-300',
+    accent: 'from-cyan-400/20 to-cyan-500/20',
+    icon: 'text-cyan-400'
+  },
+  'IT Department': {
+    bg: 'bg-purple-100/10',
+    border: 'border-purple-300/30',
+    text: 'text-purple-300',
+    accent: 'from-purple-400/20 to-purple-500/20',
+    icon: 'text-purple-400'
+  }
+};
+
 export function UserManagement() {
   const [users, setUsers] = useState<User[]>([]);
   const [showModal, setShowModal] = useState(false);
@@ -31,6 +90,7 @@ export function UserManagement() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [deletingUser, setDeletingUser] = useState<User | null>(null);
+  const [expandedDepartments, setExpandedDepartments] = useState<Set<string>>(new Set(DEPARTMENTS));
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -197,111 +257,169 @@ export function UserManagement() {
     setShowDeleteModal(true);
   };
 
+  const toggleDepartment = (department: string) => {
+    const newExpanded = new Set(expandedDepartments);
+    if (newExpanded.has(department)) {
+      newExpanded.delete(department);
+    } else {
+      newExpanded.add(department);
+    }
+    setExpandedDepartments(newExpanded);
+  };
+
+  // Group users by department
+  const groupedUsers = DEPARTMENTS.reduce((acc, dept) => {
+    acc[dept] = users.filter(user => user.department === dept);
+    return acc;
+  }, {} as Record<string, User[]>);
+
+  const totalUsers = users.length;
+  const activeUsers = users.filter(user => user.active).length;
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-white">User Management</h2>
-        <button
-          onClick={handleAdd}
-          className="bg-gradient-to-r from-emerald-500 to-green-600 text-white px-4 py-2 rounded-lg font-medium hover:from-emerald-600 hover:to-green-700 transition-all duration-200 flex items-center gap-2 shadow-lg"
-        >
-          <Plus className="w-4 h-4" />
-          Add User
-        </button>
+        <div>
+          <h2 className="text-2xl font-bold text-white">User Management</h2>
+          <p className="text-slate-400">Manage users organized by department</p>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="text-right">
+            <p className="text-sm text-slate-400">Total Users</p>
+            <p className="text-lg font-semibold text-white">{totalUsers} ({activeUsers} active)</p>
+          </div>
+          <button
+            onClick={handleAdd}
+            className="bg-gradient-to-r from-emerald-500 to-green-600 text-white px-4 py-2 rounded-lg font-medium hover:from-emerald-600 hover:to-green-700 transition-all duration-200 flex items-center gap-2 shadow-lg"
+          >
+            <Plus className="w-4 h-4" />
+            Add User
+          </button>
+        </div>
       </div>
 
-      {/* Users Table */}
-      <div className="bg-slate-800/90 backdrop-blur-sm rounded-xl shadow-lg overflow-hidden border border-slate-700/50">
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead className="bg-slate-700/50">
-              <tr>
-                <th className="text-left py-3 px-4 font-semibold text-slate-300">User</th>
-                <th className="text-left py-3 px-4 font-semibold text-slate-300">Department</th>
-                <th className="text-left py-3 px-4 font-semibold text-slate-300">Role</th>
-                <th className="text-left py-3 px-4 font-semibold text-slate-300">Staff House</th>
-                <th className="text-left py-3 px-4 font-semibold text-slate-300">Status</th>
-                <th className="text-left py-3 px-4 font-semibold text-slate-300">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-700/50">
-              {users.map((user) => (
-                <tr key={user.id} className="hover:bg-slate-700/30 transition-colors">
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-slate-700/50 p-2 rounded-lg">
-                        {user.role === 'admin' ? (
-                          <Shield className="w-4 h-4 text-emerald-400" />
-                        ) : (
-                          <User className="w-4 h-4 text-slate-400" />
-                        )}
+      {/* Department-wise User Lists */}
+      <div className="space-y-4">
+        {DEPARTMENTS.map((department) => {
+          const deptUsers = groupedUsers[department];
+          const colors = DEPARTMENT_COLORS[department];
+          const isExpanded = expandedDepartments.has(department);
+          const activeCount = deptUsers.filter(user => user.active).length;
+
+          return (
+            <div key={department} className={`${colors.bg} backdrop-blur-sm rounded-xl shadow-lg overflow-hidden border ${colors.border}`}>
+              <button
+                onClick={() => toggleDepartment(department)}
+                className={`w-full px-6 py-4 bg-gradient-to-r ${colors.accent} border-b ${colors.border} flex items-center justify-between hover:opacity-80 transition-all duration-200`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`bg-gradient-to-br ${colors.accent} p-2 rounded-lg border ${colors.border}`}>
+                    <User className={`w-5 h-5 ${colors.icon}`} />
+                  </div>
+                  <div className="text-left">
+                    <h3 className={`text-lg font-semibold ${colors.text}`}>{department}</h3>
+                    <p className="text-sm text-slate-400">
+                      {deptUsers.length} total • {activeCount} active
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium border ${colors.border} ${colors.text}`}>
+                    {deptUsers.length} users
+                  </span>
+                  {isExpanded ? (
+                    <ChevronUp className="w-5 h-5 text-slate-400" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-slate-400" />
+                  )}
+                </div>
+              </button>
+
+              {isExpanded && (
+                <div className="divide-y divide-slate-700/30">
+                  {deptUsers.length > 0 ? (
+                    deptUsers.map((user) => (
+                      <div key={user.id} className="p-6 hover:bg-slate-700/20 transition-colors">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className={`bg-gradient-to-br ${colors.accent} p-3 rounded-lg border ${colors.border}`}>
+                              {user.role === 'admin' ? (
+                                <Shield className={`w-5 h-5 ${colors.icon}`} />
+                              ) : (
+                                <User className={`w-5 h-5 ${colors.icon}`} />
+                              )}
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-white">{user.username}</h4>
+                              <div className="flex items-center gap-3 mt-1">
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  user.role === 'admin' 
+                                    ? 'bg-emerald-900/20 text-emerald-400 border border-emerald-800/50' 
+                                    : 'bg-blue-900/20 text-blue-400 border border-blue-800/50'
+                                }`}>
+                                  {user.role.toUpperCase()}
+                                </span>
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  user.staff_house 
+                                    ? 'bg-purple-900/20 text-purple-400 border border-purple-800/50' 
+                                    : 'bg-slate-700/50 text-slate-400 border border-slate-600/50'
+                                }`}>
+                                  {user.staff_house ? 'Staff House' : 'No Staff House'}
+                                </span>
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  user.active 
+                                    ? 'bg-emerald-900/20 text-emerald-400 border border-emerald-800/50' 
+                                    : 'bg-red-900/20 text-red-400 border border-red-800/50'
+                                }`}>
+                                  {user.active ? 'Active' : 'Inactive'}
+                                </span>
+                              </div>
+                              <p className="text-sm text-slate-400 mt-1">
+                                Created {new Date(user.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleEdit(user)}
+                              className="text-blue-400 hover:text-blue-300 p-2 rounded-lg hover:bg-blue-900/20 transition-all duration-200"
+                              title="Edit User"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleTimeEdit(user.id)}
+                              className="text-emerald-400 hover:text-emerald-300 p-2 rounded-lg hover:bg-emerald-900/20 transition-all duration-200"
+                              title="Adjust Time"
+                            >
+                              <Clock className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteClick(user)}
+                              className="text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-900/20 transition-all duration-200"
+                              title="Delete User"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium text-white">{user.username}</p>
-                        <p className="text-sm text-slate-400">
-                          Created {new Date(user.created_at).toLocaleDateString()}
-                        </p>
+                    ))
+                  ) : (
+                    <div className="p-8 text-center">
+                      <div className={`bg-gradient-to-br ${colors.accent} p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center border ${colors.border}`}>
+                        <User className={`w-8 h-8 ${colors.icon}`} />
                       </div>
+                      <h3 className="text-lg font-medium text-white mb-2">No Users in {department}</h3>
+                      <p className="text-slate-400">Add users to this department to get started.</p>
                     </div>
-                  </td>
-                  <td className="py-3 px-4 text-slate-300">{user.department}</td>
-                  <td className="py-3 px-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      user.role === 'admin' 
-                        ? 'bg-emerald-900/20 text-emerald-400 border border-emerald-800/50' 
-                        : 'bg-blue-900/20 text-blue-400 border border-blue-800/50'
-                    }`}>
-                      {user.role.toUpperCase()}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      user.staff_house 
-                        ? 'bg-purple-900/20 text-purple-400 border border-purple-800/50' 
-                        : 'bg-slate-700/50 text-slate-400 border border-slate-600/50'
-                    }`}>
-                      {user.staff_house ? 'Yes' : 'No'}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      user.active 
-                        ? 'bg-emerald-900/20 text-emerald-400 border border-emerald-800/50' 
-                        : 'bg-red-900/20 text-red-400 border border-red-800/50'
-                    }`}>
-                      {user.active ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleEdit(user)}
-                        className="text-blue-400 hover:text-blue-300 p-1 rounded transition-colors"
-                        title="Edit User"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleTimeEdit(user.id)}
-                        className="text-emerald-400 hover:text-emerald-300 p-1 rounded transition-colors"
-                        title="Adjust Time"
-                      >
-                        <Clock className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteClick(user)}
-                        className="text-red-400 hover:text-red-300 p-1 rounded transition-colors"
-                        title="Delete User"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* User Modal */}
