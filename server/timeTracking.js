@@ -45,28 +45,14 @@ export async function clockOut(userId, overtimeNote = null) {
 
     const entry = entries[0];
     const clockInTime = new Date(entry.clock_in);
-    const shiftEndTime = new Date(clockInTime);
-    shiftEndTime.setHours(15, 30, 0, 0); // 3:30 PM
 
-    let overtimeRequested = false;
-    // Check if clocking out after 4:00 PM (30 minutes grace period after 3:30 PM)
-    const overtimeThreshold = new Date(shiftEndTime.getTime() + 30 * 60 * 1000); // 4:00 PM
-    if (now > overtimeThreshold) {
-      overtimeRequested = true;
-    }
-
+    // Simple clock out without automatic overtime detection
     await pool.execute(
-      'UPDATE time_entries SET clock_out = ?, overtime_requested = ?, overtime_note = ? WHERE id = ?',
-      [now, overtimeRequested, overtimeNote, entry.id]
+      'UPDATE time_entries SET clock_out = ? WHERE id = ?',
+      [now, entry.id]
     );
 
-    // If overtime was requested, set it as pending approval
-    if (overtimeRequested && overtimeNote) {
-      // The overtime_approved field remains NULL for pending requests
-      console.log('Overtime request submitted for entry:', entry.id);
-    }
-
-    return { success: true, overtimeRequested };
+    return { success: true };
   } catch (error) {
     console.error('Clock out error:', error);
     return { success: false, message: 'Server error' };

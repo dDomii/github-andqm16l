@@ -64,12 +64,18 @@ app.get('/api/today-entry', authenticate, async (req, res) => {
 });
 
 app.get('/api/user-payroll-history', authenticate, async (req, res) => {
-  const { weekStart, weekEnd } = req.query;
+  const { weekStart, weekEnd, specificDay } = req.query;
   
   try {
     let query, params;
     
-    if (weekStart && weekEnd) {
+    if (specificDay) {
+      // Get specific day
+      query = `SELECT * FROM payslips 
+               WHERE user_id = ? AND DATE(week_start) <= ? AND DATE(week_end) >= ?
+               ORDER BY week_start DESC`;
+      params = [req.user.userId, specificDay, specificDay];
+    } else if (weekStart && weekEnd) {
       // Get specific week
       query = `SELECT * FROM payslips 
                WHERE user_id = ? AND week_start = ? AND week_end = ?
@@ -202,16 +208,31 @@ app.post('/api/overtime-request', authenticate, async (req, res) => {
   try {
     const weekStart = getWeekStart(new Date(date));
     
-    // Create a manual overtime entry for admin review
-    const now = new Date();
-    const clockIn = new Date(`${date}T16:00:00`); // Assume 4 PM start for manual OT
-    const clockOut = new Date(`${date}T18:00:00`); // Assume 2 hours of OT
-    
-    await pool.execute(
-      `INSERT INTO time_entries (user_id, clock_in, clock_out, date, week_start, overtime_requested, overtime_note) 
-       VALUES (?, ?, ?, ?, ?, TRUE, ?)`,
-      [req.user.userId, clockIn, clockOut, date, weekStart, overtimeNote]
+    // Check if user already has a time entry for this date
+    const [existingEntry] = await pool.execute(
+      'SELECT * FROM time_entries WHERE user_id = ? AND DATE(clock_in) = ?',
+      [req.user.userId, date]
     );
+    
+    if (existingEntry.length > 0) {
+      // Update existing entry with overtime request
+      await pool.execute(
+        `UPDATE time_entries 
+         SET overtime_requested = TRUE, overtime_note = ?, overtime_approved = NULL
+         WHERE id = ?`,
+        [overtimeNote, existingEntry[0].id]
+      );
+    } else {
+      // Create a new overtime-only entry for admin review
+      const clockIn = new Date(`${date}T16:00:00`); // 4 PM start for manual OT
+      const clockOut = new Date(`${date}T18:00:00`); // 2 hours of OT
+      
+      await pool.execute(
+        `INSERT INTO time_entries (user_id, clock_in, clock_out, date, week_start, overtime_requested, overtime_note, overtime_approved) 
+         VALUES (?, ?, ?, ?, ?, TRUE, ?, NULL)`,
+        [req.user.userId, clockIn, clockOut, date, weekStart, overtimeNote]
+      );
+    }
 
     res.json({ success: true });
   } catch (error) {

@@ -63,16 +63,7 @@ export function TimeTracking() {
   };
 
   const handleClockOut = async () => {
-    const now = new Date();
-    const overtimeThreshold = new Date();
-    overtimeThreshold.setHours(16, 0, 0, 0); // 4:00 PM (30 minutes after 3:30 PM shift end)
-
-    // Check if it's after overtime threshold (4:00 PM)
-    if (now > overtimeThreshold) {
-      setShowOvertimeModal(true);
-      return;
-    }
-
+    // Simple clock out without overtime logic
     await performClockOut();
   };
 
@@ -115,33 +106,28 @@ export function TimeTracking() {
 
     setIsLoading(true);
     try {
-      // If user is currently clocked in, clock them out with overtime
-      if (todayEntry && !todayEntry.clock_out) {
-        await performClockOut();
+      // Submit standalone overtime request (separate from clock out)
+      const response = await fetch('http://192.168.100.60:3001/api/overtime-request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ 
+          overtimeNote,
+          date: new Date().toISOString().split('T')[0]
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setShowOvertimeModal(false);
+        setOvertimeNote('');
+        alert('Overtime request submitted for admin approval!');
+        await fetchTodayEntry();
       } else {
-        // Submit standalone overtime request (for manual requests)
-        const response = await fetch('http://192.168.100.60:3001/api/overtime-request', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ 
-            overtimeNote,
-            date: new Date().toISOString().split('T')[0]
-          }),
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-          setShowOvertimeModal(false);
-          setOvertimeNote('');
-          alert('Overtime request submitted for admin approval!');
-          await fetchTodayEntry();
-        } else {
-          alert(data.message || 'Failed to submit overtime request');
-        }
+        alert(data.message || 'Failed to submit overtime request');
       }
     } catch (error) {
       console.error('Overtime request error:', error);
@@ -526,7 +512,7 @@ export function TimeTracking() {
                 disabled={!overtimeNote.trim() || isLoading}
                 className="flex-1 bg-gradient-to-r from-emerald-500 to-green-600 text-white py-2 px-4 rounded-lg font-medium hover:from-emerald-600 hover:to-green-700 disabled:opacity-50 transition-all duration-200"
               >
-                {isLoading ? 'Processing...' : (todayEntry && !todayEntry.clock_out ? 'Clock Out & Request OT' : 'Submit Request')}
+                {isLoading ? 'Processing...' : 'Submit Request'}
               </button>
             </div>
           </div>

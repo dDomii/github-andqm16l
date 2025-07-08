@@ -23,6 +23,7 @@ export function PayrollHistory() {
   const [payrollHistory, setPayrollHistory] = useState<PayrollEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedWeek, setSelectedWeek] = useState('');
+  const [selectedDay, setSelectedDay] = useState('');
   const { token, user } = useAuth();
 
   useEffect(() => {
@@ -45,6 +46,26 @@ export function PayrollHistory() {
     const end = new Date(start);
     end.setDate(start.getDate() + 6);
     return end.toISOString().split('T')[0];
+  };
+
+  const generateDaysInWeek = (weekStart: string) => {
+    const days = [];
+    const start = new Date(weekStart);
+    
+    for (let i = 0; i < 7; i++) {
+      const day = new Date(start);
+      day.setDate(start.getDate() + i);
+      days.push({
+        value: day.toISOString().split('T')[0],
+        label: day.toLocaleDateString('en-US', { 
+          weekday: 'long', 
+          month: 'short', 
+          day: 'numeric' 
+        })
+      });
+    }
+    
+    return days;
   };
 
   const generateWeekOptions = () => {
@@ -71,8 +92,18 @@ export function PayrollHistory() {
   const fetchPayrollHistory = async () => {
     setLoading(true);
     try {
-      const weekEnd = getWeekEnd(selectedWeek);
-      const response = await fetch(`http://192.168.100.60:3001/api/user-payroll-history?weekStart=${selectedWeek}&weekEnd=${weekEnd}`, {
+      let url = `http://192.168.100.60:3001/api/user-payroll-history?weekStart=${selectedWeek}`;
+      
+      if (selectedDay) {
+        // If specific day is selected, fetch only that day's data
+        url += `&specificDay=${selectedDay}`;
+      } else {
+        // Fetch entire week
+        const weekEnd = getWeekEnd(selectedWeek);
+        url += `&weekEnd=${weekEnd}`;
+      }
+      
+      const response = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -168,6 +199,7 @@ export function PayrollHistory() {
 
   const stats = calculateStats();
   const weekOptions = generateWeekOptions();
+  const daysInWeek = selectedWeek ? generateDaysInWeek(selectedWeek) : [];
 
   return (
     <div>
@@ -188,6 +220,21 @@ export function PayrollHistory() {
               </option>
             ))}
           </select>
+          
+          {/* Day selector */}
+          <select
+            value={selectedDay}
+            onChange={(e) => setSelectedDay(e.target.value)}
+            className="bg-slate-700/50 border border-slate-600 text-white px-3 py-2 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+          >
+            <option value="">All Days</option>
+            {daysInWeek.map(day => (
+              <option key={day.value} value={day.value}>
+                {day.label}
+              </option>
+            ))}
+          </select>
+          
           {payrollHistory.length > 0 && (
             <button
               onClick={exportToCSV}
@@ -261,7 +308,10 @@ export function PayrollHistory() {
         <div className="bg-slate-800/90 backdrop-blur-sm rounded-xl shadow-lg overflow-hidden border border-slate-700/50">
           <div className="bg-slate-700/50 px-6 py-4 border-b border-slate-600/50">
             <h3 className="text-lg font-semibold text-white">
-              Week of {formatDate(selectedWeek)} - {formatDate(getWeekEnd(selectedWeek))}
+              {selectedDay 
+                ? `${daysInWeek.find(d => d.value === selectedDay)?.label || formatDate(selectedDay)}`
+                : `Week of ${formatDate(selectedWeek)} - ${formatDate(getWeekEnd(selectedWeek))}`
+              }
             </h3>
           </div>
           <div className="overflow-x-auto">
@@ -339,7 +389,9 @@ export function PayrollHistory() {
         <div className="text-center py-12">
           <Calendar className="w-16 h-16 text-slate-600 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-white mb-2">No Payroll History</h3>
-          <p className="text-slate-400">No payroll records found for the selected week.</p>
+          <p className="text-slate-400">
+            No payroll records found for the selected {selectedDay ? 'day' : 'week'}.
+          </p>
         </div>
       )}
     </div>
