@@ -257,6 +257,7 @@ export function LiveReports() {
                     </div>
                   )}
                 </div>
+                <p className="text-2xl font-bold text-purple-400">₱{(totalHoursWorked * 25).toFixed(2)}</p>
               </div>
             );
           })}

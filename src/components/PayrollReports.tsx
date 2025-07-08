@@ -89,22 +89,16 @@ export function PayrollReports() {
   };
 
   const generatePayslips = async () => {
-    if (generationMode === 'range' && (!startDate || !endDate)) return;
-    if (generationMode === 'specific' && selectedDates.length === 0) return;
+    if (selectedDates.length === 0) return;
     
     setLoading(true);
     setError('');
     try {
       const requestBody: any = {};
       
-      if (generationMode === 'specific') {
-        requestBody.selectedDates = selectedDates;
-        if (selectedUsers.length > 0) {
-          requestBody.userIds = selectedUsers;
-        }
-      } else {
-        requestBody.startDate = startDate;
-        requestBody.endDate = endDate;
+      requestBody.selectedDates = selectedDates;
+      if (selectedUsers.length > 0) {
+        requestBody.userIds = selectedUsers;
       }
 
       const response = await fetch('http://192.168.100.60:3001/api/payslips/generate', {
@@ -136,17 +130,12 @@ export function PayrollReports() {
   };
 
   const fetchPayrollReport = async () => {
-    if (generationMode === 'range' && (!startDate || !endDate)) return;
-    if (generationMode === 'specific' && selectedDates.length === 0) return;
+    if (selectedDates.length === 0) return;
     
     try {
       let url = 'http://192.168.100.60:3001/api/payroll-report';
-      if (generationMode === 'range') {
-        url += `?startDate=${startDate}&endDate=${endDate}`;
-      } else {
-        // For specific dates, pass them as a comma-separated string
-        url += `?selectedDates=${selectedDates.join(',')}`;
-      }
+      // For specific dates, pass them as a comma-separated string
+      url += `?selectedDates=${selectedDates.join(',')}`;
       
       const response = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
@@ -302,7 +291,7 @@ export function PayrollReports() {
     
     const filename = generationMode === 'specific' 
       ? `payroll_report_selected_days_${selectedDates[0]}_to_${selectedDates[selectedDates.length - 1]}.csv`
-      : `payroll_report_${startDate}_to_${endDate}.csv`;
+      : `payroll_report_selected_days.csv`;
     
     link.download = filename;
     link.click();
@@ -385,72 +374,17 @@ export function PayrollReports() {
           {/* Generation Mode Selection */}
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-white mb-4">Generation Mode</h3>
-            <div className="flex gap-4">
-              <button
-                onClick={() => setGenerationMode('range')}
-                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                  generationMode === 'range'
-                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white'
-                    : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
-                }`}
-              >
-                Date Range
-              </button>
+            <div className="flex justify-center">
               <button
                 onClick={() => setGenerationMode('specific')}
-                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                  generationMode === 'specific'
-                    ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white'
-                    : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
-                }`}
+                className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-3 rounded-lg font-medium shadow-lg"
               >
                 Specific Days
               </button>
             </div>
           </div>
 
-          {generationMode === 'range' ? (
-            <div className="flex flex-wrap gap-4 items-end">
-              <div className="flex-1 min-w-[200px]">
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Start Date
-                </label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-white"
-                />
-              </div>
-              <div className="flex-1 min-w-[200px]">
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  End Date
-                </label>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-white"
-                />
-              </div>
-              <button
-                onClick={generatePayslips}
-                disabled={loading || !startDate || !endDate}
-                className="bg-gradient-to-r from-emerald-500 to-green-600 text-white px-6 py-2 rounded-lg font-medium hover:from-emerald-600 hover:to-green-700 disabled:opacity-50 transition-all duration-200 flex items-center gap-2 shadow-lg"
-              >
-                <FileText className="w-4 h-4" />
-                {loading ? 'Generating...' : 'Generate Payslips'}
-              </button>
-              <button
-                onClick={fetchPayrollReport}
-                disabled={!startDate || !endDate}
-                className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 transition-all duration-200 flex items-center gap-2 shadow-lg"
-              >
-                <Eye className="w-4 h-4" />
-                Load Report
-              </button>
-            </div>
-          ) : (
+          {generationMode === 'specific' && (
             <div className="space-y-6">
               {/* Date Selection */}
               <div>

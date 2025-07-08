@@ -49,7 +49,9 @@ export async function clockOut(userId, overtimeNote = null) {
     shiftEndTime.setHours(15, 30, 0, 0); // 3:30 PM
 
     let overtimeRequested = false;
-    if (now > shiftEndTime && (now - shiftEndTime) > 30 * 60 * 1000) { // 30 minutes after shift
+    // Check if clocking out after 4:00 PM (30 minutes grace period after 3:30 PM)
+    const overtimeThreshold = new Date(shiftEndTime.getTime() + 30 * 60 * 1000); // 4:00 PM
+    if (now > overtimeThreshold) {
       overtimeRequested = true;
     }
 

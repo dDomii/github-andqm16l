@@ -64,19 +64,13 @@ export function TimeTracking() {
 
   const handleClockOut = async () => {
     const now = new Date();
-    const shiftEndTime = new Date();
-    shiftEndTime.setHours(15, 30, 0, 0); // 3:30 PM
+    const overtimeThreshold = new Date();
+    overtimeThreshold.setHours(16, 0, 0, 0); // 4:00 PM (30 minutes after 3:30 PM shift end)
 
-    // Check if it's after shift hours (potential overtime)
-    if (now > shiftEndTime) {
-      const timeDiff = now.getTime() - shiftEndTime.getTime();
-      const minutesDiff = timeDiff / (1000 * 60);
-      
-      // If more than 30 minutes after shift end, show overtime modal
-      if (minutesDiff > 30) {
-        setShowOvertimeModal(true);
-        return;
-      }
+    // Check if it's after overtime threshold (4:00 PM)
+    if (now > overtimeThreshold) {
+      setShowOvertimeModal(true);
+      return;
     }
 
     await performClockOut();
@@ -158,17 +152,17 @@ export function TimeTracking() {
 
   const isAfterShiftHours = () => {
     const now = new Date();
-    const shiftEnd = new Date();
-    shiftEnd.setHours(15, 30, 0, 0);
-    return now > shiftEnd;
+    const overtimeThreshold = new Date();
+    overtimeThreshold.setHours(16, 0, 0, 0); // 4:00 PM
+    return now > overtimeThreshold;
   };
 
   const getOvertimeTime = () => {
     if (!isAfterShiftHours()) return { hours: 0, minutes: 0, seconds: 0 };
     const now = new Date();
-    const shiftEnd = new Date();
-    shiftEnd.setHours(15, 30, 0, 0);
-    const diff = Math.max(0, now.getTime() - shiftEnd.getTime());
+    const overtimeThreshold = new Date();
+    overtimeThreshold.setHours(16, 0, 0, 0); // 4:00 PM
+    const diff = Math.max(0, now.getTime() - overtimeThreshold.getTime());
     
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
@@ -330,7 +324,7 @@ export function TimeTracking() {
                                 <div className="flex items-center gap-2">
                                   <Clock className="w-4 h-4 text-orange-400" />
                                   <p className="text-sm font-medium text-orange-400">
-                                    Potential Overtime: {formatTimeDisplay(overtimeTime)}
+                                    Potential Overtime: {formatTimeDisplay(overtimeTime)} past 4:00 PM
                                   </p>
                                 </div>
                                 <p className="text-xs text-orange-500 mt-1">
@@ -373,8 +367,19 @@ export function TimeTracking() {
                     )}
 
                     {todayEntry && todayEntry.clock_in && todayEntry.clock_out && (
-                      <div className="bg-slate-700/50 p-4 rounded-xl text-center border border-slate-600/50">
-                        <p className="text-slate-300">You have completed your shift for today.</p>
+                      <div className="space-y-4">
+                        <div className="bg-slate-700/50 p-4 rounded-xl text-center border border-slate-600/50">
+                          <p className="text-slate-300">You have completed your shift for today.</p>
+                        </div>
+                        
+                        {/* Manual Overtime Request Button */}
+                        <button
+                          onClick={() => setShowOvertimeModal(true)}
+                          className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 px-6 rounded-xl font-medium hover:from-orange-600 hover:to-orange-700 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-slate-800 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg"
+                        >
+                          <Clock className="w-5 h-5" />
+                          Request Overtime
+                        </button>
                       </div>
                     )}
 
@@ -389,7 +394,7 @@ export function TimeTracking() {
                   <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
                     <div>
                       <span className="text-slate-400">Regular Hours:</span>
-                      <p className="font-semibold text-white">7:00 AM - 3:30 PM (8.5h)</p>
+                      <p className="font-semibold text-white">7:00 AM - 3:30 PM (8h + 30min break)</p>
                     </div>
                     <div>
                       <span className="text-slate-400">Overtime Policy:</span>
@@ -397,7 +402,7 @@ export function TimeTracking() {
                     </div>
                     <div>
                       <span className="text-slate-400">Late Policy:</span>
-                      <p className="font-semibold text-white">After 7:00 AM (-₱23.53/hour)</p>
+                      <p className="font-semibold text-white">After 7:00 AM (-₱25/hour)</p>
                     </div>
                     <div>
                       <span className="text-slate-400">Staff House:</span>
@@ -415,7 +420,7 @@ export function TimeTracking() {
                   </div>
                   <div className="mt-4 pt-4 border-t border-slate-600/50">
                     <p className="text-xs text-slate-500">
-                      <strong>Note:</strong> Regular shift is 8.5 hours (including 30-minute break) = ₱200/day. Late clock-in (after 7:00 AM) incurs deductions. Early clock-out is no longer penalized.
+                      <strong>Note:</strong> Regular shift is 8 hours (30-minute unpaid break) = ₱200/day. Late clock-in (after 7:00 AM) incurs ₱25/hour deductions. Overtime starts after 4:00 PM (30-minute grace period).
                     </p>
                   </div>
                 </div>
@@ -441,7 +446,7 @@ export function TimeTracking() {
                 <strong>You're clocking out after shift hours.</strong>
               </p>
               <p className="text-sm text-orange-300">
-                Current overtime: {formatTimeDisplay(overtimeTime)} past 3:30 PM
+                Current overtime: {formatTimeDisplay(overtimeTime)} past 4:00 PM
               </p>
             </div>
             

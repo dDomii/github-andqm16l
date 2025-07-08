@@ -51,17 +51,14 @@ export async function calculateWeeklyPayroll(userId, weekStart) {
         undertimeHours += lateHours;
       }
 
-      // NO EARLY CLOCK OUT DEDUCTION - removed this logic
-      // Early clock out before 3:30 PM is no longer penalized
-
       // Handle overtime calculation
       if (entry.overtime_requested && entry.overtime_approved) {
         const shiftEndTime = new Date(clockIn);
         shiftEndTime.setHours(15, 30, 0, 0);
         
         if (clockOut > shiftEndTime) {
-          // Calculate overtime hours (subtract 30 minutes grace period)
-          const overtimeStart = new Date(Math.max(shiftEndTime.getTime() + 30 * 60 * 1000, shiftEndTime.getTime()));
+          // Calculate overtime hours (30 minutes grace period after 3:30 PM = 4:00 PM)
+          const overtimeStart = new Date(shiftEndTime.getTime() + 30 * 60 * 1000); // 4:00 PM
           const overtime = Math.max(0, (clockOut - overtimeStart) / (1000 * 60 * 60));
           overtimeHours += overtime;
           totalHours += workedHours; // Count actual worked hours
@@ -74,9 +71,9 @@ export async function calculateWeeklyPayroll(userId, weekStart) {
     });
 
     // Calculate based on actual hours worked
-    const baseSalary = totalHours * 23.53; // 200 PHP / 8.5 hours = 23.53 PHP/hour
+    const baseSalary = totalHours * 25; // 200 PHP / 8 hours = 25 PHP/hour
     const overtimePay = overtimeHours * 35;
-    const undertimeDeduction = undertimeHours * 23.53;
+    const undertimeDeduction = undertimeHours * 25;
     const staffHouseDeduction = userData.staff_house ? 250 : 0;
     
     const totalSalary = baseSalary + overtimePay - undertimeDeduction - staffHouseDeduction;
@@ -289,8 +286,6 @@ export async function calculatePayrollForSpecificDays(userId, selectedDates) {
         undertimeHours += lateHours;
       }
 
-      // NO EARLY CLOCK OUT DEDUCTION - removed this logic
-
       // Handle overtime calculation
       if (entry.overtime_requested && entry.overtime_approved) {
         const shiftEndTime = new Date(clockIn);
@@ -311,9 +306,9 @@ export async function calculatePayrollForSpecificDays(userId, selectedDates) {
     });
 
     // Calculate based on actual hours worked
-    const baseSalary = totalHours * 23.53; // 200 PHP / 8.5 hours = 23.53 PHP/hour
+    const baseSalary = totalHours * 25; // 200 PHP / 8 hours = 25 PHP/hour
     const overtimePay = overtimeHours * 35;
-    const undertimeDeduction = undertimeHours * 23.53;
+    const undertimeDeduction = undertimeHours * 25;
     const staffHouseDeduction = userData.staff_house ? (250 * selectedDates.length / 5) : 0; // Prorated
     
     const totalSalary = baseSalary + overtimePay - undertimeDeduction - staffHouseDeduction;
@@ -409,9 +404,9 @@ export async function calculatePayrollForDateRange(userId, startDate, endDate) {
     });
 
     // Calculate based on actual hours worked
-    const baseSalary = totalHours * 23.53; // 200 PHP / 8.5 hours = 23.53 PHP/hour
+    const baseSalary = totalHours * 25; // 200 PHP / 8 hours = 25 PHP/hour
     const overtimePay = overtimeHours * 35;
-    const undertimeDeduction = undertimeHours * 23.53;
+    const undertimeDeduction = undertimeHours * 25;
     
     // Calculate number of working days for staff house deduction
     const start = new Date(startDate);

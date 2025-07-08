@@ -72,12 +72,12 @@ export function OvertimeApproval() {
   const calculateOvertimeHours = (clockIn: string, clockOut: string) => {
     const clockInTime = new Date(clockIn);
     const clockOutTime = new Date(clockOut);
-    const shiftEnd = new Date(clockInTime);
-    shiftEnd.setHours(15, 30, 0, 0);
+    const overtimeThreshold = new Date(clockInTime);
+    overtimeThreshold.setHours(16, 0, 0, 0); // 4:00 PM (30 minutes after 3:30 PM shift end)
 
-    if (clockOutTime > shiftEnd) {
-      const overtime = (clockOutTime.getTime() - Math.max(shiftEnd.getTime(), clockInTime.getTime())) / (1000 * 60 * 60);
-      return Math.max(0, overtime - 0.5).toFixed(2); // Subtract 30 minutes grace period
+    if (clockOutTime > overtimeThreshold) {
+      const overtime = (clockOutTime.getTime() - overtimeThreshold.getTime()) / (1000 * 60 * 60);
+      return Math.max(0, overtime).toFixed(2);
     }
     return '0.00';
   };
