@@ -220,15 +220,20 @@ app.get('/api/payroll-report', authenticate, async (req, res) => {
     return res.status(403).json({ message: 'Admin access required' });
   }
 
-  const { weekStart, startDate, endDate } = req.query;
+  const { weekStart, startDate, endDate, selectedDates } = req.query;
   
   let report;
-  if (startDate && endDate) {
+  if (selectedDates) {
+    // Handle specific dates - parse the comma-separated string
+    const datesArray = selectedDates.split(',');
+    const sortedDates = datesArray.sort();
+    report = await getPayrollReport(sortedDates[0], sortedDates[sortedDates.length - 1]);
+  } else if (startDate && endDate) {
     report = await getPayrollReport(startDate, endDate);
   } else if (weekStart) {
     report = await getPayrollReport(weekStart);
   } else {
-    return res.status(400).json({ message: 'Either weekStart or startDate/endDate is required' });
+    return res.status(400).json({ message: 'Either weekStart, startDate/endDate, or selectedDates is required' });
   }
   
   res.json(report);

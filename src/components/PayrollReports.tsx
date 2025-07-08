@@ -144,9 +144,8 @@ export function PayrollReports() {
       if (generationMode === 'range') {
         url += `?startDate=${startDate}&endDate=${endDate}`;
       } else {
-        // For specific dates, use the first and last selected dates
-        const sortedDates = [...selectedDates].sort();
-        url += `?startDate=${sortedDates[0]}&endDate=${sortedDates[sortedDates.length - 1]}`;
+        // For specific dates, pass them as a comma-separated string
+        url += `?selectedDates=${selectedDates.join(',')}`;
       }
       
       const response = await fetch(url, {

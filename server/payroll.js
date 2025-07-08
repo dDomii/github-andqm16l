@@ -64,18 +64,17 @@ export async function calculateWeeklyPayroll(userId, weekStart) {
           const overtimeStart = new Date(Math.max(shiftEndTime.getTime() + 30 * 60 * 1000, shiftEndTime.getTime()));
           const overtime = Math.max(0, (clockOut - overtimeStart) / (1000 * 60 * 60));
           overtimeHours += overtime;
-          totalHours += 8.5; // Count as full shift (8.5 hours including break) for approved overtime
+          totalHours += workedHours; // Count actual worked hours
         } else {
-          totalHours += Math.min(workedHours, 8.5);
+          totalHours += workedHours; // Count actual worked hours
         }
       } else {
-        totalHours += Math.min(workedHours, 8.5);
+        totalHours += workedHours; // Count actual worked hours
       }
     });
 
-    // Calculate based on 8.5 hours per day (including 30-minute break)
-    const requiredWeeklyHours = 42.5; // 8.5 hours × 5 days
-    const baseSalary = Math.min(totalHours, requiredWeeklyHours) * 23.53; // 200 PHP / 8.5 hours = 23.53 PHP/hour
+    // Calculate based on actual hours worked
+    const baseSalary = totalHours * 23.53; // 200 PHP / 8.5 hours = 23.53 PHP/hour
     const overtimePay = overtimeHours * 35;
     const undertimeDeduction = undertimeHours * 23.53;
     const staffHouseDeduction = userData.staff_house ? 250 : 0;
@@ -302,21 +301,20 @@ export async function calculatePayrollForSpecificDays(userId, selectedDates) {
           const overtimeStart = new Date(Math.max(shiftEndTime.getTime() + 30 * 60 * 1000, shiftEndTime.getTime()));
           const overtime = Math.max(0, (clockOut - overtimeStart) / (1000 * 60 * 60));
           overtimeHours += overtime;
-          totalHours += 8.5; // Count as full shift for approved overtime
+          totalHours += workedHours; // Count actual worked hours
         } else {
-          totalHours += Math.min(workedHours, 8.5);
+          totalHours += workedHours; // Count actual worked hours
         }
       } else {
-        totalHours += Math.min(workedHours, 8.5);
+        totalHours += workedHours; // Count actual worked hours
       }
     });
 
-    // Calculate based on selected days (8.5 hours per day including break)
-    const expectedHours = selectedDates.length * 8.5;
-    const baseSalary = Math.min(totalHours, expectedHours) * 23.53; // 200 PHP / 8.5 hours = 23.53 PHP/hour
+    // Calculate based on actual hours worked
+    const baseSalary = totalHours * 23.53; // 200 PHP / 8.5 hours = 23.53 PHP/hour
     const overtimePay = overtimeHours * 35;
     const undertimeDeduction = undertimeHours * 23.53;
-    const staffHouseDeduction = userData.staff_house ? (250 * selectedDates.length / 5) : 0; // Prorated based on days
+    const staffHouseDeduction = userData.staff_house ? (250 * selectedDates.length / 5) : 0; // Prorated
     
     const totalSalary = baseSalary + overtimePay - undertimeDeduction - staffHouseDeduction;
 
@@ -401,23 +399,24 @@ export async function calculatePayrollForDateRange(userId, startDate, endDate) {
           const overtimeStart = new Date(Math.max(shiftEndTime.getTime() + 30 * 60 * 1000, shiftEndTime.getTime()));
           const overtime = Math.max(0, (clockOut - overtimeStart) / (1000 * 60 * 60));
           overtimeHours += overtime;
-          totalHours += 8.5; // Count as full shift for approved overtime
+          totalHours += workedHours; // Count actual worked hours
         } else {
-          totalHours += Math.min(workedHours, 8.5);
+          totalHours += workedHours; // Count actual worked hours
         }
       } else {
-        totalHours += Math.min(workedHours, 8.5);
+        totalHours += workedHours; // Count actual worked hours
       }
     });
 
-    // Calculate number of working days in the date range
+    // Calculate based on actual hours worked
+    const baseSalary = totalHours * 23.53; // 200 PHP / 8.5 hours = 23.53 PHP/hour
+    const overtimePay = overtimeHours * 35;
+    const undertimeDeduction = undertimeHours * 23.53;
+    
+    // Calculate number of working days for staff house deduction
     const start = new Date(startDate);
     const end = new Date(endDate);
     const daysDiff = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
-    
-    const baseSalary = Math.min(totalHours, daysDiff * 8.5) * 23.53; // 200 PHP / 8.5 hours = 23.53 PHP/hour
-    const overtimePay = overtimeHours * 35;
-    const undertimeDeduction = undertimeHours * 23.53;
     const staffHouseDeduction = userData.staff_house ? (250 * daysDiff / 5) : 0; // Prorated
     
     const totalSalary = baseSalary + overtimePay - undertimeDeduction - staffHouseDeduction;
