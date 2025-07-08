@@ -32,9 +32,9 @@ export function Layout({ children }: LayoutProps) {
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-3">
                   {user?.role === 'admin' ? (
-                    <img src="./src/assets/Media.jpg" alt="The Backroom Logo" class="w-auto h-9 object-contain"/>
+                    <img src="./src/assets/Media.jpg" alt="The Backroom Logo" class="w-auto h-12 object-contain"/>
                   ) : (
-                    <img src="https://www.inlifemagazine.com/wp-content/uploads/2015/12/R.jpg" alt="The Backroom Logo" class="w-auto h-9 object-contain"/>
+                    <img src="https://www.inlifemagazine.com/wp-content/uploads/2015/12/R.jpg" alt="The Backroom Logo" class="w-auto h-12 object-contain"/>
                   )}
                 <div>
                   <p className="text-sm font-medium text-white">{user?.username}</p>
