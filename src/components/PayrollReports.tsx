@@ -231,7 +231,8 @@ export function PayrollReports() {
   };
 
   const formatCurrency = (amount: number) => {
-    return `₱${amount.toFixed(2)}`;
+    const numAmount = typeof amount === 'number' ? amount : parseFloat(amount) || 0;
+    return `₱${numAmount.toFixed(2)}`;
   };
 
   const formatDate = (dateString: string) => {
@@ -251,8 +252,8 @@ export function PayrollReports() {
   };
 
   const totalSalary = payrollData.reduce((sum, entry) => sum + entry.total_salary, 0);
-  const totalOvertime = payrollData.reduce((sum, entry) => sum + entry.overtime_pay, 0);
-  const totalDeductions = payrollData.reduce((sum, entry) => sum + entry.undertime_deduction + entry.staff_house_deduction, 0);
+  const totalOvertime = payrollData.reduce((sum, entry) => sum + (parseFloat(entry.overtime_pay) || 0), 0);
+  const totalDeductions = payrollData.reduce((sum, entry) => sum + (parseFloat(entry.undertime_deduction) || 0) + (parseFloat(entry.staff_house_deduction) || 0), 0);
 
   // Group payroll data by department
   const groupedPayrollData = DEPARTMENTS.reduce((acc, dept) => {
@@ -399,7 +400,7 @@ export function PayrollReports() {
                 const deptData = groupedPayrollData[department];
                 if (deptData.length === 0) return null;
 
-                const deptTotal = deptData.reduce((sum, entry) => sum + entry.total_salary, 0);
+                const deptTotal = deptData.reduce((sum, entry) => sum + (parseFloat(entry.total_salary) || 0), 0);
 
                 return (
                   <div key={department} className="bg-slate-800/90 backdrop-blur-sm rounded-xl shadow-lg overflow-hidden border border-slate-700/50">
@@ -467,23 +468,23 @@ export function PayrollReports() {
                                     <input
                                       type="number"
                                       step="0.01"
-                                      value={editData.total_hours || 0}
+                                      value={editData.total_hours || ''}
                                       onChange={(e) => setEditData({ ...editData, total_hours: parseFloat(e.target.value) || 0 })}
                                       className="w-16 text-xs px-1 py-1 bg-slate-700/50 border border-slate-600 rounded text-right text-white"
                                     />
                                     <input
                                       type="number"
                                       step="0.01"
-                                      value={editData.undertime_hours || 0}
+                                      value={editData.undertime_hours || ''}
                                       onChange={(e) => setEditData({ ...editData, undertime_hours: parseFloat(e.target.value) || 0 })}
                                       className="w-16 text-xs px-1 py-1 bg-slate-700/50 border border-slate-600 rounded text-right text-white"
                                     />
                                   </div>
                                 ) : (
                                   <div>
-                                    <p className="text-white">{entry.total_hours.toFixed(2)}h</p>
-                                    {entry.undertime_hours > 0 && (
-                                      <p className="text-sm text-red-400">-{entry.undertime_hours.toFixed(2)}h</p>
+                                    <p className="text-white">{(parseFloat(entry.total_hours) || 0).toFixed(2)}h</p>
+                                    {(parseFloat(entry.undertime_hours) || 0) > 0 && (
+                                      <p className="text-sm text-red-400">-{(parseFloat(entry.undertime_hours) || 0).toFixed(2)}h</p>
                                     )}
                                   </div>
                                 )}
@@ -493,12 +494,12 @@ export function PayrollReports() {
                                   <input
                                     type="number"
                                     step="0.01"
-                                    value={editData.overtime_hours || 0}
+                                    value={editData.overtime_hours || ''}
                                     onChange={(e) => setEditData({ ...editData, overtime_hours: parseFloat(e.target.value) || 0 })}
                                     className="w-16 text-xs px-1 py-1 bg-slate-700/50 border border-slate-600 rounded text-right text-white"
                                   />
                                 ) : (
-                                  entry.overtime_hours > 0 ? `${entry.overtime_hours.toFixed(2)}h` : '-'
+                                  (parseFloat(entry.overtime_hours) || 0) > 0 ? `${(parseFloat(entry.overtime_hours) || 0).toFixed(2)}h` : '-'
                                 )}
                               </td>
                               <td className="py-3 px-4 text-right text-white">
@@ -506,12 +507,12 @@ export function PayrollReports() {
                                   <input
                                     type="number"
                                     step="0.01"
-                                    value={editData.base_salary || 0}
+                                    value={editData.base_salary || ''}
                                     onChange={(e) => setEditData({ ...editData, base_salary: parseFloat(e.target.value) || 0 })}
                                     className="w-20 text-xs px-1 py-1 bg-slate-700/50 border border-slate-600 rounded text-right text-white"
                                   />
                                 ) : (
-                                  formatCurrency(entry.base_salary)
+                                  formatCurrency(parseFloat(entry.base_salary) || 0)
                                 )}
                               </td>
                               <td className="py-3 px-4 text-right text-emerald-400">
@@ -519,12 +520,12 @@ export function PayrollReports() {
                                   <input
                                     type="number"
                                     step="0.01"
-                                    value={editData.overtime_pay || 0}
+                                    value={editData.overtime_pay || ''}
                                     onChange={(e) => setEditData({ ...editData, overtime_pay: parseFloat(e.target.value) || 0 })}
                                     className="w-20 text-xs px-1 py-1 bg-slate-700/50 border border-slate-600 rounded text-right text-white"
                                   />
                                 ) : (
-                                  entry.overtime_pay > 0 ? formatCurrency(entry.overtime_pay) : '-'
+                                  (parseFloat(entry.overtime_pay) || 0) > 0 ? formatCurrency(parseFloat(entry.overtime_pay) || 0) : '-'
                                 )}
                               </td>
                               <td className="py-3 px-4 text-right text-red-400">
@@ -533,21 +534,21 @@ export function PayrollReports() {
                                     <input
                                       type="number"
                                       step="0.01"
-                                      value={editData.undertime_deduction || 0}
+                                      value={editData.undertime_deduction || ''}
                                       onChange={(e) => setEditData({ ...editData, undertime_deduction: parseFloat(e.target.value) || 0 })}
                                       className="w-20 text-xs px-1 py-1 bg-slate-700/50 border border-slate-600 rounded text-right text-white"
                                     />
                                     <input
                                       type="number"
                                       step="0.01"
-                                      value={editData.staff_house_deduction || 0}
+                                      value={editData.staff_house_deduction || ''}
                                       onChange={(e) => setEditData({ ...editData, staff_house_deduction: parseFloat(e.target.value) || 0 })}
                                       className="w-20 text-xs px-1 py-1 bg-slate-700/50 border border-slate-600 rounded text-right text-white"
                                     />
                                   </div>
                                 ) : (
-                                  (entry.undertime_deduction + entry.staff_house_deduction) > 0 
-                                    ? formatCurrency(entry.undertime_deduction + entry.staff_house_deduction) 
+                                  ((parseFloat(entry.undertime_deduction) || 0) + (parseFloat(entry.staff_house_deduction) || 0)) > 0 
+                                    ? formatCurrency((parseFloat(entry.undertime_deduction) || 0) + (parseFloat(entry.staff_house_deduction) || 0)) 
                                     : '-'
                                 )}
                               </td>
@@ -560,7 +561,7 @@ export function PayrollReports() {
                                         (editData.undertime_deduction || 0) - 
                                         (editData.staff_house_deduction || 0)
                                       )
-                                    : formatCurrency(entry.total_salary)
+                                    : formatCurrency(parseFloat(entry.total_salary) || 0)
                                   }
                                 </p>
                               </td>
