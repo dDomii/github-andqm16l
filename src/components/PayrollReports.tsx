@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Download, Calendar, PhilippinePeso, FileText, AlertCircle, Edit2, Save, X, Eye } from 'lucide-react';
+import { Download, Calendar, PhilippinePeso, FileText, AlertCircle, Edit2, Save, X, Eye, Users, CheckSquare, Square } from 'lucide-react';
 
 interface PayrollEntry {
   id: number;
@@ -20,6 +20,13 @@ interface PayrollEntry {
   clock_out_time: string;
 }
 
+interface User {
+  id: number;
+  username: string;
+  department: string;
+  active: boolean;
+}
+
 const DEPARTMENTS = [
   'Human Resource',
   'Marketing', 
@@ -33,13 +40,17 @@ const DEPARTMENTS = [
 
 export function PayrollReports() {
   const [payrollData, setPayrollData] = useState<PayrollEntry[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [selectedDates, setSelectedDates] = useState<string[]>([]);
+  const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [editingEntry, setEditingEntry] = useState<number | null>(null);
   const [editData, setEditData] = useState<Partial<PayrollEntry>>({});
   const [activeTab, setActiveTab] = useState<'generate' | 'preview'>('generate');
+  const [generationMode, setGenerationMode] = useState<'range' | 'specific'>('range');
   const { token } = useAuth();
 
   useEffect(() => {
@@ -48,7 +59,20 @@ export function PayrollReports() {
     const currentWeekEnd = getWeekEnd(today);
     setStartDate(currentWeekStart);
     setEndDate(currentWeekEnd);
+    fetchUsers();
   }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch('http://192.168.100.60:3001/api/users', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      setUsers(data.filter((user: User) => user.active));
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
+  };
 
   const getWeekStart = (date: Date) => {
     const d = new Date(date);
@@ -65,18 +89,31 @@ export function PayrollReports() {
   };
 
   const generatePayslips = async () => {
-    if (!startDate || !endDate) return;
+    if (generationMode === 'range' && (!startDate || !endDate)) return;
+    if (generationMode === 'specific' && selectedDates.length === 0) return;
     
     setLoading(true);
     setError('');
     try {
+      const requestBody: any = {};
+      
+      if (generationMode === 'specific') {
+        requestBody.selectedDates = selectedDates;
+        if (selectedUsers.length > 0) {
+          requestBody.userIds = selectedUsers;
+        }
+      } else {
+        requestBody.startDate = startDate;
+        requestBody.endDate = endDate;
+      }
+
       const response = await fetch('http://192.168.100.60:3001/api/payslips/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ startDate, endDate }),
+        body: JSON.stringify(requestBody),
       });
 
       const data = await response.json();
@@ -99,10 +136,20 @@ export function PayrollReports() {
   };
 
   const fetchPayrollReport = async () => {
-    if (!startDate || !endDate) return;
+    if (generationMode === 'range' && (!startDate || !endDate)) return;
+    if (generationMode === 'specific' && selectedDates.length === 0) return;
     
     try {
-      const response = await fetch(`http://192.168.100.60:3001/api/payroll-report?startDate=${startDate}&endDate=${endDate}`, {
+      let url = 'http://192.168.100.60:3001/api/payroll-report';
+      if (generationMode === 'range') {
+        url += `?startDate=${startDate}&endDate=${endDate}`;
+      } else {
+        // For specific dates, use the first and last selected dates
+        const sortedDates = [...selectedDates].sort();
+        url += `?startDate=${sortedDates[0]}&endDate=${sortedDates[sortedDates.length - 1]}`;
+      }
+      
+      const response = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -166,6 +213,33 @@ export function PayrollReports() {
     setEditData({});
   };
 
+  const handleDateToggle = (date: string) => {
+    setSelectedDates(prev => 
+      prev.includes(date) 
+        ? prev.filter(d => d !== date)
+        : [...prev, date].sort()
+    );
+  };
+
+  const handleUserToggle = (userId: number) => {
+    setSelectedUsers(prev => 
+      prev.includes(userId) 
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId]
+    );
+  };
+
+  const generateDateRange = (start: string, end: string) => {
+    const dates = [];
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    
+    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+      dates.push(d.toISOString().split('T')[0]);
+    }
+    return dates;
+  };
+
   const exportToCSV = () => {
     if (payrollData.length === 0) return;
 
@@ -188,8 +262,8 @@ export function PayrollReports() {
       'Undertime Deduction (₱)',
       'Staff House Deduction (₱)',
       'Total Salary (₱)',
-      'Week Start',
-      'Week End'
+      'Period Start',
+      'Period End'
     ];
 
     let csvContent = headers.join(',') + '\n';
@@ -226,7 +300,12 @@ export function PayrollReports() {
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `payroll_report_${startDate}_to_${endDate}.csv`;
+    
+    const filename = generationMode === 'specific' 
+      ? `payroll_report_selected_days_${selectedDates[0]}_to_${selectedDates[selectedDates.length - 1]}.csv`
+      : `payroll_report_${startDate}_to_${endDate}.csv`;
+    
+    link.download = filename;
     link.click();
   };
 
@@ -261,12 +340,18 @@ export function PayrollReports() {
     return acc;
   }, {} as Record<string, PayrollEntry[]>);
 
+  // Group users by department
+  const groupedUsers = DEPARTMENTS.reduce((acc, dept) => {
+    acc[dept] = users.filter(user => user.department === dept);
+    return acc;
+  }, {} as Record<string, User[]>);
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-2xl font-bold text-white">Payroll Management</h2>
-          <p className="text-slate-400">Generate and manage employee payroll</p>
+          <p className="text-slate-400">Generate and manage employee payroll with flexible date selection</p>
         </div>
       </div>
 
@@ -298,46 +383,229 @@ export function PayrollReports() {
 
       {activeTab === 'generate' && (
         <div className="bg-slate-800/90 backdrop-blur-sm rounded-xl p-6 mb-6 shadow-lg border border-slate-700/50">
-          <div className="flex flex-wrap gap-4 items-end">
-            <div className="flex-1 min-w-[200px]">
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Start Date
-              </label>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-white"
-              />
+          {/* Generation Mode Selection */}
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Generation Mode</h3>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setGenerationMode('range')}
+                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                  generationMode === 'range'
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white'
+                    : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
+                }`}
+              >
+                Date Range
+              </button>
+              <button
+                onClick={() => setGenerationMode('specific')}
+                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                  generationMode === 'specific'
+                    ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white'
+                    : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
+                }`}
+              >
+                Specific Days
+              </button>
             </div>
-            <div className="flex-1 min-w-[200px]">
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                End Date
-              </label>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-white"
-              />
-            </div>
-            <button
-              onClick={generatePayslips}
-              disabled={loading || !startDate || !endDate}
-              className="bg-gradient-to-r from-emerald-500 to-green-600 text-white px-6 py-2 rounded-lg font-medium hover:from-emerald-600 hover:to-green-700 disabled:opacity-50 transition-all duration-200 flex items-center gap-2 shadow-lg"
-            >
-              <FileText className="w-4 h-4" />
-              {loading ? 'Generating...' : 'Generate Payslips'}
-            </button>
-            <button
-              onClick={fetchPayrollReport}
-              disabled={!startDate || !endDate}
-              className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 transition-all duration-200 flex items-center gap-2 shadow-lg"
-            >
-              <Eye className="w-4 h-4" />
-              Load Report
-            </button>
           </div>
+
+          {generationMode === 'range' ? (
+            <div className="flex flex-wrap gap-4 items-end">
+              <div className="flex-1 min-w-[200px]">
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-white"
+                />
+              </div>
+              <div className="flex-1 min-w-[200px]">
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  End Date
+                </label>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-white"
+                />
+              </div>
+              <button
+                onClick={generatePayslips}
+                disabled={loading || !startDate || !endDate}
+                className="bg-gradient-to-r from-emerald-500 to-green-600 text-white px-6 py-2 rounded-lg font-medium hover:from-emerald-600 hover:to-green-700 disabled:opacity-50 transition-all duration-200 flex items-center gap-2 shadow-lg"
+              >
+                <FileText className="w-4 h-4" />
+                {loading ? 'Generating...' : 'Generate Payslips'}
+              </button>
+              <button
+                onClick={fetchPayrollReport}
+                disabled={!startDate || !endDate}
+                className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 transition-all duration-200 flex items-center gap-2 shadow-lg"
+              >
+                <Eye className="w-4 h-4" />
+                Load Report
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Date Selection */}
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Select Specific Days
+                </label>
+                <div className="bg-slate-700/30 p-4 rounded-lg border border-slate-600/50">
+                  <div className="flex gap-4 mb-4">
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-white"
+                    />
+                    <span className="text-slate-400 self-center">to</span>
+                    <input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-white"
+                    />
+                    <button
+                      onClick={() => {
+                        if (startDate && endDate) {
+                          const dates = generateDateRange(startDate, endDate);
+                          setSelectedDates(dates);
+                        }
+                      }}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      Select All Days
+                    </button>
+                    <button
+                      onClick={() => setSelectedDates([])}
+                      className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                  
+                  {startDate && endDate && (
+                    <div className="grid grid-cols-7 gap-2">
+                      {generateDateRange(startDate, endDate).map(date => (
+                        <button
+                          key={date}
+                          onClick={() => handleDateToggle(date)}
+                          className={`p-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                            selectedDates.includes(date)
+                              ? 'bg-emerald-600 text-white'
+                              : 'bg-slate-600/50 text-slate-300 hover:bg-slate-500/50'
+                          }`}
+                        >
+                          {new Date(date).toLocaleDateString('en-US', { 
+                            month: 'short', 
+                            day: 'numeric' 
+                          })}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {selectedDates.length > 0 && (
+                    <div className="mt-4 p-3 bg-emerald-900/20 rounded-lg border border-emerald-800/50">
+                      <p className="text-emerald-400 text-sm">
+                        <strong>{selectedDates.length} days selected:</strong> {selectedDates.join(', ')}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* User Selection */}
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Select Users (Optional - leave empty for all users)
+                </label>
+                <div className="bg-slate-700/30 p-4 rounded-lg border border-slate-600/50 max-h-64 overflow-y-auto">
+                  <div className="flex gap-4 mb-4">
+                    <button
+                      onClick={() => setSelectedUsers(users.map(u => u.id))}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                    >
+                      Select All
+                    </button>
+                    <button
+                      onClick={() => setSelectedUsers([])}
+                      className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm"
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                  
+                  {DEPARTMENTS.map(dept => {
+                    const deptUsers = groupedUsers[dept];
+                    if (deptUsers.length === 0) return null;
+                    
+                    return (
+                      <div key={dept} className="mb-4">
+                        <h4 className="text-slate-300 font-medium mb-2">{dept}</h4>
+                        <div className="grid grid-cols-2 gap-2">
+                          {deptUsers.map(user => (
+                            <button
+                              key={user.id}
+                              onClick={() => handleUserToggle(user.id)}
+                              className={`flex items-center gap-2 p-2 rounded-lg text-sm transition-all duration-200 ${
+                                selectedUsers.includes(user.id)
+                                  ? 'bg-emerald-600/20 text-emerald-400 border border-emerald-600/50'
+                                  : 'bg-slate-600/30 text-slate-300 hover:bg-slate-500/30'
+                              }`}
+                            >
+                              {selectedUsers.includes(user.id) ? (
+                                <CheckSquare className="w-4 h-4" />
+                              ) : (
+                                <Square className="w-4 h-4" />
+                              )}
+                              {user.username}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                {selectedUsers.length > 0 && (
+                  <div className="mt-2 p-3 bg-blue-900/20 rounded-lg border border-blue-800/50">
+                    <p className="text-blue-400 text-sm">
+                      <strong>{selectedUsers.length} users selected</strong>
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-4">
+                <button
+                  onClick={generatePayslips}
+                  disabled={loading || selectedDates.length === 0}
+                  className="bg-gradient-to-r from-emerald-500 to-green-600 text-white px-6 py-2 rounded-lg font-medium hover:from-emerald-600 hover:to-green-700 disabled:opacity-50 transition-all duration-200 flex items-center gap-2 shadow-lg"
+                >
+                  <FileText className="w-4 h-4" />
+                  {loading ? 'Generating...' : 'Generate Payslips'}
+                </button>
+                <button
+                  onClick={fetchPayrollReport}
+                  disabled={selectedDates.length === 0}
+                  className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 transition-all duration-200 flex items-center gap-2 shadow-lg"
+                >
+                  <Eye className="w-4 h-4" />
+                  Load Report
+                </button>
+              </div>
+            </div>
+          )}
 
           {error && (
             <div className="mt-4 flex items-center gap-2 text-red-400 bg-red-900/20 p-3 rounded-lg border border-red-800/50">

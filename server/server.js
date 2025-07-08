@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import { initializeDatabase } from './database.js';
 import { loginUser, verifyToken, createUser, updateUser, deleteUser } from './auth.js';
 import { clockIn, clockOut, getTodayEntry, getOvertimeRequests, approveOvertime } from './timeTracking.js';
-import { generateWeeklyPayslips, generatePayslipsForDateRange, getPayrollReport, updatePayrollEntry } from './payroll.js';
+import { generateWeeklyPayslips, generatePayslipsForDateRange, generatePayslipsForSpecificDays, getPayrollReport, updatePayrollEntry } from './payroll.js';
 import { pool } from './database.js';
 
 // Load environment variables
@@ -190,17 +190,22 @@ app.post('/api/payslips/generate', authenticate, async (req, res) => {
     return res.status(403).json({ message: 'Admin access required' });
   }
 
-  const { weekStart, startDate, endDate } = req.body;
+  const { weekStart, startDate, endDate, selectedDates, userIds } = req.body;
   
   try {
-    // Support both old weekStart format and new date range format
+    // Support multiple generation modes
     let payslips;
-    if (startDate && endDate) {
+    if (selectedDates && selectedDates.length > 0) {
+      // Generate for specific selected days
+      payslips = await generatePayslipsForSpecificDays(selectedDates, userIds);
+    } else if (startDate && endDate) {
+      // Generate for date range
       payslips = await generatePayslipsForDateRange(startDate, endDate);
     } else if (weekStart) {
+      // Generate for week (backward compatibility)
       payslips = await generateWeeklyPayslips(weekStart);
     } else {
-      return res.status(400).json({ message: 'Either weekStart or startDate/endDate is required' });
+      return res.status(400).json({ message: 'Either weekStart, startDate/endDate, or selectedDates is required' });
     }
     
     res.json(payslips);

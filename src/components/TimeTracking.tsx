@@ -389,15 +389,15 @@ export function TimeTracking() {
                   <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
                     <div>
                       <span className="text-slate-400">Regular Hours:</span>
-                      <p className="font-semibold text-white">7:00 AM - 3:30 PM</p>
+                      <p className="font-semibold text-white">7:00 AM - 3:30 PM (8.5h)</p>
                     </div>
                     <div>
                       <span className="text-slate-400">Overtime Policy:</span>
                       <p className="font-semibold text-white">After 4:00 PM (+₱35/hour)</p>
                     </div>
                     <div>
-                      <span className="text-slate-400">Undertime:</span>
-                      <p className="font-semibold text-white">Before 3:30 PM (-₱25/hour)</p>
+                      <span className="text-slate-400">Late Policy:</span>
+                      <p className="font-semibold text-white">After 7:00 AM (-₱25/hour)</p>
                     </div>
                     <div>
                       <span className="text-slate-400">Staff House:</span>
@@ -415,7 +415,7 @@ export function TimeTracking() {
                   </div>
                   <div className="mt-4 pt-4 border-t border-slate-600/50">
                     <p className="text-xs text-slate-500">
-                      <strong>Note:</strong> Late clock-in (after 7:00 AM) is considered undertime and cannot be compensated by overtime unless overtime is specifically approved by admin.
+                      <strong>Note:</strong> Regular shift is 8.5 hours (including 30-minute break). Late clock-in (after 7:00 AM) incurs deductions. Early clock-out is no longer penalized.
                     </p>
                   </div>
                 </div>
