@@ -217,7 +217,8 @@ export function TimeTracking() {
       {/* Tabs */}
       <div className="bg-slate-800/90 backdrop-blur-sm rounded-xl shadow-lg mb-6 border border-slate-700/50">
         <div className="border-b border-slate-700/50">
-          <nav className="flex space-x-8 px-6" aria-label="Tabs">
+          <nav className="flex justify-center" aria-label="Tabs">
+            <div className="bg-slate-700/30 p-1 rounded-xl m-4">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
@@ -226,15 +227,16 @@ export function TimeTracking() {
                   onClick={() => setActiveTab(tab.id as TabType)}
                   className={`${
                     activeTab === tab.id
-                      ? 'border-emerald-500 text-emerald-400'
-                      : 'border-transparent text-slate-400 hover:text-slate-300 hover:border-slate-600'
-                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-all duration-200`}
+                      ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-lg transform scale-105'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-600/50'
+                  } whitespace-nowrap py-3 px-6 rounded-lg font-medium text-sm flex items-center gap-2 transition-all duration-300`}
                 >
                   <Icon className="w-4 h-4" />
                   {tab.label}
                 </button>
               );
             })}
+            </div>
           </nav>
         </div>
 
@@ -411,7 +413,7 @@ export function TimeTracking() {
                         {user?.staff_house ? (
                           <>
                             <Home className="w-4 h-4 text-emerald-400" />
-                            <p className="font-semibold text-emerald-400">Yes (-₱250/week)</p>
+                            <p className="font-semibold text-emerald-400">Yes (-₱250.00/week)</p>
                           </>
                         ) : (
                           <p className="font-semibold text-slate-300">No</p>

@@ -251,14 +251,14 @@ export function PayrollHistory() {
                     </td>
                     <td className="py-3 px-4 text-right">
                       <div>
-                        <p className="text-white">{entry.total_hours}h</p>
+                        <p className="text-white">{entry.total_hours.toFixed(2)}h</p>
                         {entry.undertime_hours > 0 && (
-                          <p className="text-sm text-red-400">-{entry.undertime_hours}h</p>
+                          <p className="text-sm text-red-400">-{entry.undertime_hours.toFixed(2)}h</p>
                         )}
                       </div>
                     </td>
                     <td className="py-3 px-4 text-right text-orange-400">
-                      {entry.overtime_hours > 0 ? `${entry.overtime_hours}h` : '-'}
+                      {entry.overtime_hours > 0 ? `${entry.overtime_hours.toFixed(2)}h` : '-'}
                     </td>
                     <td className="py-3 px-4 text-right text-white">
                       {formatCurrency(entry.base_salary)}

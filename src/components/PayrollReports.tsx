@@ -207,14 +207,14 @@ export function PayrollReports() {
             entry.username,
             entry.clock_in_time || 'N/A',
             entry.clock_out_time || 'N/A',
-            entry.total_hours,
-            entry.overtime_hours,
-            entry.undertime_hours,
-            entry.base_salary,
-            entry.overtime_pay,
-            entry.undertime_deduction,
-            entry.staff_house_deduction,
-            entry.total_salary,
+            entry.total_hours.toFixed(2),
+            entry.overtime_hours.toFixed(2),
+            entry.undertime_hours.toFixed(2),
+            entry.base_salary.toFixed(2),
+            entry.overtime_pay.toFixed(2),
+            entry.undertime_deduction.toFixed(2),
+            entry.staff_house_deduction.toFixed(2),
+            entry.total_salary.toFixed(2),
             entry.week_start,
             entry.week_end
           ];
@@ -270,27 +270,29 @@ export function PayrollReports() {
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex space-x-1 mb-6">
-        <button
-          onClick={() => setActiveTab('generate')}
-          className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-            activeTab === 'generate'
-              ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-lg'
-              : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
-          }`}
-        >
-          Generate Payslips
-        </button>
-        <button
-          onClick={() => setActiveTab('preview')}
-          className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-            activeTab === 'preview'
-              ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-lg'
-              : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
-          }`}
-        >
-          Payslip Preview
-        </button>
+      <div className="flex justify-center mb-6">
+        <div className="bg-slate-800/50 p-1 rounded-xl border border-slate-700/50">
+          <button
+            onClick={() => setActiveTab('generate')}
+            className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
+              activeTab === 'generate'
+                ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-lg transform scale-105'
+                : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+            }`}
+          >
+            Generate Payslips
+          </button>
+          <button
+            onClick={() => setActiveTab('preview')}
+            className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
+              activeTab === 'preview'
+                ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-lg transform scale-105'
+                : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+            }`}
+          >
+            Payslip Preview
+          </button>
+        </div>
       </div>
 
       {activeTab === 'generate' && (
@@ -464,14 +466,14 @@ export function PayrollReports() {
                                   <div className="space-y-1">
                                     <input
                                       type="number"
-                                      step="0.1"
+                                      step="0.01"
                                       value={editData.total_hours || 0}
                                       onChange={(e) => setEditData({ ...editData, total_hours: parseFloat(e.target.value) || 0 })}
                                       className="w-16 text-xs px-1 py-1 bg-slate-700/50 border border-slate-600 rounded text-right text-white"
                                     />
                                     <input
                                       type="number"
-                                      step="0.1"
+                                      step="0.01"
                                       value={editData.undertime_hours || 0}
                                       onChange={(e) => setEditData({ ...editData, undertime_hours: parseFloat(e.target.value) || 0 })}
                                       className="w-16 text-xs px-1 py-1 bg-slate-700/50 border border-slate-600 rounded text-right text-white"
@@ -479,9 +481,9 @@ export function PayrollReports() {
                                   </div>
                                 ) : (
                                   <div>
-                                    <p className="text-white">{entry.total_hours}h</p>
+                                    <p className="text-white">{entry.total_hours.toFixed(2)}h</p>
                                     {entry.undertime_hours > 0 && (
-                                      <p className="text-sm text-red-400">-{entry.undertime_hours}h</p>
+                                      <p className="text-sm text-red-400">-{entry.undertime_hours.toFixed(2)}h</p>
                                     )}
                                   </div>
                                 )}
@@ -490,13 +492,13 @@ export function PayrollReports() {
                                 {editingEntry === entry.id ? (
                                   <input
                                     type="number"
-                                    step="0.1"
+                                    step="0.01"
                                     value={editData.overtime_hours || 0}
                                     onChange={(e) => setEditData({ ...editData, overtime_hours: parseFloat(e.target.value) || 0 })}
                                     className="w-16 text-xs px-1 py-1 bg-slate-700/50 border border-slate-600 rounded text-right text-white"
                                   />
                                 ) : (
-                                  entry.overtime_hours > 0 ? `${entry.overtime_hours}h` : '-'
+                                  entry.overtime_hours > 0 ? `${entry.overtime_hours.toFixed(2)}h` : '-'
                                 )}
                               </td>
                               <td className="py-3 px-4 text-right text-white">
