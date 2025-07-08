@@ -61,8 +61,8 @@ export async function createUser(userData) {
     const hashedPassword = await bcrypt.hash(userData.password, 10);
     
     const [result] = await pool.execute(
-      'INSERT INTO users (username, password, role, department, staff_house, active) VALUES (?, ?, ?, ?, ?, ?)',
-      [userData.username, hashedPassword, userData.role, userData.department, userData.staff_house, userData.active]
+      'INSERT INTO users (username, password, role, department, staff_house, gcash_number, active) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [userData.username, hashedPassword, userData.role, userData.department, userData.staff_house, userData.gcash_number, userData.active]
     );
 
     return { success: true, userId: result.insertId };
@@ -77,8 +77,8 @@ export async function createUser(userData) {
 
 export async function updateUser(userId, userData) {
   try {
-    let query = 'UPDATE users SET department = ?, staff_house = ?, active = ?';
-    let params = [userData.department, userData.staff_house, userData.active];
+    let query = 'UPDATE users SET department = ?, staff_house = ?, gcash_number = ?, active = ?';
+    let params = [userData.department, userData.staff_house, userData.gcash_number, userData.active];
 
     if (userData.password) {
       const hashedPassword = await bcrypt.hash(userData.password, 10);

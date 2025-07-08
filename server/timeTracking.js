@@ -94,7 +94,7 @@ export async function getOvertimeRequests() {
 export async function approveOvertime(entryId, approved, adminId) {
   try {
     await pool.execute(
-      'UPDATE time_entries SET overtime_approved = ?, overtime_approved_by = ? WHERE id = ?',
+      'UPDATE time_entries SET overtime_approved = ?, overtime_approved_by = ?, overtime_notification_sent = FALSE WHERE id = ?',
       [approved, adminId, entryId]
     );
 

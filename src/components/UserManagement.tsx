@@ -364,6 +364,11 @@ export function UserManagement() {
                                     Staff House
                                   </span>
                                 )}
+                                {user.gcash_number && (
+                                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-900/20 text-green-400">
+                                    GCash
+                                  </span>
+                                )}
                                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                                   user.active 
                                     ? 'bg-emerald-900/20 text-emerald-400' 
@@ -374,6 +379,9 @@ export function UserManagement() {
                               </div>
                               <p className="text-xs text-slate-400 mt-1">
                                 {new Date(user.created_at).toLocaleDateString()}
+                                {user.gcash_number && (
+                                  <span className="block">GCash: {user.gcash_number}</span>
+                                )}
                               </p>
                             </div>
                           </div>

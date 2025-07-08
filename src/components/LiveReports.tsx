@@ -240,6 +240,9 @@ export function LiveReports() {
                               <p className={`text-sm font-semibold ${inOvertime ? 'text-orange-400' : 'text-blue-400'}`}>
                                 {formatTimeDisplay(currentTime)}
                               </p>
+                              <p className="text-xs text-green-400">
+                                ₱{(currentTime.hours * 25 + (inOvertime ? Math.max(0, currentTime.hours - 8) * 35 : 0)).toFixed(2)}
+                              </p>
                               {inOvertime && (
                                 <p className="text-xs text-orange-500">Overtime</p>
                               )}

@@ -309,7 +309,10 @@ export async function calculatePayrollForSpecificDays(userId, selectedDates) {
     const baseSalary = totalHours * 25; // 200 PHP / 8 hours = 25 PHP/hour
     const overtimePay = overtimeHours * 35;
     const undertimeDeduction = undertimeHours * 25;
-    const staffHouseDeduction = userData.staff_house ? (250 * selectedDates.length / 5) : 0; // Prorated
+    
+    // Count actual working days from selected dates
+    const workingDays = entries.filter(entry => entry.clock_out).length;
+    const staffHouseDeduction = userData.staff_house ? (250 * workingDays / 5) : 0; // Prorated based on actual working days
     
     const totalSalary = baseSalary + overtimePay - undertimeDeduction - staffHouseDeduction;
 

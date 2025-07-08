@@ -263,21 +263,18 @@ export function PayrollReports() {
       'Period End'
     ];
 
-    let csvContent = headers.join(',') + '\n';
+    const csvRows = [headers];
 
     // Add data organized by department
     DEPARTMENTS.forEach(dept => {
       const deptEntries = groupedData[dept];
       if (deptEntries.length > 0) {
-        // Add department header
-        csvContent += `\n"${dept} Department"\n`;
-        
         deptEntries.forEach(entry => {
           const row = [
             entry.department,
             entry.username,
-            entry.clock_in_time || 'N/A',
-            entry.clock_out_time || 'N/A',
+            formatTime(entry.clock_in_time),
+            formatTime(entry.clock_out_time),
             entry.total_hours.toFixed(2),
             entry.overtime_hours.toFixed(2),
             entry.undertime_hours.toFixed(2),
@@ -289,10 +286,12 @@ export function PayrollReports() {
             entry.week_start,
             entry.week_end
           ];
-          csvContent += row.map(field => `"${field}"`).join(',') + '\n';
+          csvRows.push(row);
         });
       }
     });
+
+    const csvContent = csvRows.map(row => row.map(field => `"${field}"`).join(',')).join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');

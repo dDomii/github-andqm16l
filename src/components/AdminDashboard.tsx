@@ -4,16 +4,18 @@ import { UserManagement } from './UserManagement';
 import { OvertimeApproval } from './OvertimeApproval';
 import { PayrollReports } from './PayrollReports';
 import { LiveReports } from './LiveReports';
+import { TimeLogs } from './TimeLogs';
 import { 
   Users, 
   Clock, 
   PhilippinePeso, 
   Settings,
   Activity,
-  Calendar
+  Calendar,
+  FileText
 } from 'lucide-react';
 
-type TabType = 'users' | 'overtime' | 'payroll' | 'live-reports';
+type TabType = 'users' | 'overtime' | 'payroll' | 'live-reports' | 'time-logs';
 
 export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<TabType>('users');
@@ -58,7 +60,8 @@ export function AdminDashboard() {
     { id: 'users', label: 'User Management', icon: Users },
     { id: 'overtime', label: 'Overtime Approval', icon: Clock },
     { id: 'payroll', label: 'Payroll', icon: PhilippinePeso },
-    { id: 'live-reports', label: 'Live Reports', icon: Activity }
+    { id: 'live-reports', label: 'Live Reports', icon: Activity },
+    { id: 'time-logs', label: 'Time Logs', icon: FileText }
   ];
 
   return (
@@ -150,6 +153,7 @@ export function AdminDashboard() {
           {activeTab === 'overtime' && <OvertimeApproval />}
           {activeTab === 'payroll' && <PayrollReports />}
           {activeTab === 'live-reports' && <LiveReports />}
+          {activeTab === 'time-logs' && <TimeLogs />}
         </div>
       </div>
     </div>

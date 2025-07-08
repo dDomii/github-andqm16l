@@ -31,6 +31,7 @@ export async function initializeDatabase() {
         role ENUM('admin', 'ojt') NOT NULL DEFAULT 'ojt',
         department VARCHAR(100),
         staff_house BOOLEAN DEFAULT FALSE,
+        gcash_number VARCHAR(20),
         active BOOLEAN DEFAULT TRUE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -50,6 +51,7 @@ export async function initializeDatabase() {
         overtime_approved_by INT NULL,
         date DATE NOT NULL,
         week_start DATE NOT NULL,
+        overtime_notification_sent BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id),

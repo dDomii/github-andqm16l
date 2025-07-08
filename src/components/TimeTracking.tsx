@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Clock, Play, Square, MessageSquare, AlertCircle, Home, BarChart3 } from 'lucide-react';
+import { Clock, Play, Square, MessageSquare, AlertCircle, Home, BarChart3, X } from 'lucide-react';
 import { PayrollHistory } from './PayrollHistory';
 
 interface TimeEntry {

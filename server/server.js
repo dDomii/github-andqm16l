@@ -104,7 +104,7 @@ app.get('/api/users', authenticate, async (req, res) => {
 
   try {
     const [users] = await pool.execute(
-      'SELECT id, username, role, department, staff_house, active, created_at FROM users ORDER BY department, username'
+      'SELECT id, username, role, department, staff_house, gcash_number, active, created_at FROM users ORDER BY department, username'
     );
     res.json(users);
   } catch (error) {
@@ -297,6 +297,62 @@ app.get('/api/payroll-report', authenticate, async (req, res) => {
   
   console.log('Payroll report result:', report.length, 'entries');
   res.json(report);
+});
+
+app.get('/api/overtime-notifications', authenticate, async (req, res) => {
+  try {
+    const [notifications] = await pool.execute(`
+      SELECT te.*, u.username 
+      FROM time_entries te 
+      JOIN users u ON te.user_id = u.id 
+      WHERE te.user_id = ? AND te.overtime_approved IS NOT NULL AND te.overtime_notification_sent = FALSE
+      ORDER BY te.updated_at DESC
+    `, [req.user.userId]);
+
+    // Mark notifications as sent
+    if (notifications.length > 0) {
+      const entryIds = notifications.map(n => n.id);
+      await pool.execute(
+        `UPDATE time_entries SET overtime_notification_sent = TRUE WHERE id IN (${entryIds.map(() => '?').join(',')})`,
+        entryIds
+      );
+    }
+
+    res.json(notifications);
+  } catch (error) {
+    console.error('Error fetching overtime notifications:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.get('/api/time-logs', authenticate, async (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Admin access required' });
+  }
+
+  const { weekStart } = req.query;
+  
+  try {
+    let query = `
+      SELECT te.*, u.username, u.department 
+      FROM time_entries te 
+      JOIN users u ON te.user_id = u.id 
+    `;
+    let params = [];
+    
+    if (weekStart) {
+      query += ' WHERE te.week_start = ?';
+      params.push(weekStart);
+    }
+    
+    query += ' ORDER BY te.date DESC, u.department, u.username';
+    
+    const [logs] = await pool.execute(query, params);
+    res.json(logs);
+  } catch (error) {
+    console.error('Error fetching time logs:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
 app.put('/api/payroll/:id', authenticate, async (req, res) => {
