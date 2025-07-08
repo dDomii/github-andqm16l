@@ -33,9 +33,9 @@ export function Layout({ children }: LayoutProps) {
               <div className="flex items-center gap-3">
                 <div className="bg-slate-700/50 p-2 rounded-lg">
                   {user?.role === 'admin' ? (
-                    <Settings className="w-5 h-5 text-emerald-400" />
+                    <img src="./src/assets/Media.jpg" alt="The Backroom Logo" class="w-auto h-9 object-contain"/>
                   ) : (
-                    <User className="w-5 h-5 text-slate-300" />
+                    <img src="https://www.inlifemagazine.com/wp-content/uploads/2015/12/R.jpg" alt="The Backroom Logo" class="w-auto h-9 object-contain"/>
                   )}
                 </div>
                 <div>
