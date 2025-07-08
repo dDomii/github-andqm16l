@@ -22,17 +22,57 @@ interface PayrollEntry {
 export function PayrollHistory() {
   const [payrollHistory, setPayrollHistory] = useState<PayrollEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedWeek, setSelectedWeek] = useState('');
   const { token, user } = useAuth();
 
   useEffect(() => {
+    // Set current week as default
+    const today = new Date();
+    const currentWeekStart = getWeekStart(today);
+    setSelectedWeek(currentWeekStart);
     fetchPayrollHistory();
-  }, [selectedYear]);
+  }, [selectedWeek]);
+
+  const getWeekStart = (date: Date) => {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day;
+    return new Date(d.setDate(diff)).toISOString().split('T')[0];
+  };
+
+  const getWeekEnd = (weekStart: string) => {
+    const start = new Date(weekStart);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    return end.toISOString().split('T')[0];
+  };
+
+  const generateWeekOptions = () => {
+    const weeks = [];
+    const today = new Date();
+    
+    // Generate last 12 weeks
+    for (let i = 0; i < 12; i++) {
+      const weekDate = new Date(today);
+      weekDate.setDate(today.getDate() - (i * 7));
+      const weekStart = getWeekStart(weekDate);
+      const weekEnd = getWeekEnd(weekStart);
+      
+      weeks.push({
+        value: weekStart,
+        label: `${formatDate(weekStart)} - ${formatDate(weekEnd)}`,
+        isCurrent: i === 0
+      });
+    }
+    
+    return weeks;
+  };
 
   const fetchPayrollHistory = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`http://192.168.100.60:3001/api/user-payroll-history?year=${selectedYear}`, {
+      const weekEnd = getWeekEnd(selectedWeek);
+      const response = await fetch(`http://192.168.100.60:3001/api/user-payroll-history?weekStart=${selectedWeek}&weekEnd=${weekEnd}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -76,7 +116,7 @@ export function PayrollHistory() {
       totalOvertimeHours,
       totalOvertimePay,
       totalDeductions,
-      averageWeeklyPay: payrollHistory.length > 0 ? totalEarnings / payrollHistory.length : 0
+      weeklyPay: totalEarnings
     };
   };
 
@@ -122,29 +162,30 @@ export function PayrollHistory() {
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `${user?.username}_payroll_history_${selectedYear}.csv`;
+    link.download = `${user?.username}_payroll_week_${selectedWeek}.csv`;
     link.click();
   };
 
   const stats = calculateStats();
-  const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
+  const weekOptions = generateWeekOptions();
 
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-2xl font-bold text-white">Payroll History</h2>
-          <p className="text-slate-400">View your earnings and work statistics</p>
+          <p className="text-slate-400">View your weekly earnings and work statistics</p>
         </div>
         <div className="flex items-center gap-4">
           <select
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+            value={selectedWeek}
+            onChange={(e) => setSelectedWeek(e.target.value)}
             className="bg-slate-700/50 border border-slate-600 text-white px-3 py-2 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
           >
-            {years.map(year => (
-              <option key={year} value={year}>{year}</option>
+            {weekOptions.map(week => (
+              <option key={week.value} value={week.value}>
+                {week.label} {week.isCurrent ? '(Current Week)' : ''}
+              </option>
             ))}
           </select>
           {payrollHistory.length > 0 && (
@@ -164,7 +205,7 @@ export function PayrollHistory() {
         <div className="bg-slate-800/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-slate-700/50">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-400">Total Earnings</p>
+              <p className="text-sm text-slate-400">Week Earnings</p>
               <p className="text-2xl font-bold text-emerald-400">{formatCurrency(stats.totalEarnings)}</p>
             </div>
             <div className="bg-gradient-to-br from-emerald-500/20 to-green-600/20 p-3 rounded-lg">
@@ -176,7 +217,7 @@ export function PayrollHistory() {
         <div className="bg-slate-800/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-slate-700/50">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-400">Total Hours</p>
+              <p className="text-sm text-slate-400">Week Hours</p>
               <p className="text-2xl font-bold text-blue-400">{stats.totalHours.toFixed(1)}h</p>
             </div>
             <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/20 p-3 rounded-lg">
@@ -188,7 +229,7 @@ export function PayrollHistory() {
         <div className="bg-slate-800/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-slate-700/50">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-400">Overtime Hours</p>
+              <p className="text-sm text-slate-400">Week Overtime</p>
               <p className="text-2xl font-bold text-orange-400">{stats.totalOvertimeHours.toFixed(1)}h</p>
             </div>
             <div className="bg-gradient-to-br from-orange-500/20 to-orange-600/20 p-3 rounded-lg">
@@ -200,11 +241,11 @@ export function PayrollHistory() {
         <div className="bg-slate-800/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-slate-700/50">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-400">Avg Weekly Pay</p>
-              <p className="text-2xl font-bold text-purple-400">{formatCurrency(stats.averageWeeklyPay)}</p>
+              <p className="text-sm text-slate-400">Week Deductions</p>
+              <p className="text-2xl font-bold text-red-400">{formatCurrency(stats.totalDeductions)}</p>
             </div>
-            <div className="bg-gradient-to-br from-purple-500/20 to-purple-600/20 p-3 rounded-lg">
-              <Calendar className="w-6 h-6 text-purple-400" />
+            <div className="bg-gradient-to-br from-red-500/20 to-red-600/20 p-3 rounded-lg">
+              <TrendingUp className="w-6 h-6 text-red-400" />
             </div>
           </div>
         </div>
@@ -218,6 +259,11 @@ export function PayrollHistory() {
         </div>
       ) : payrollHistory.length > 0 ? (
         <div className="bg-slate-800/90 backdrop-blur-sm rounded-xl shadow-lg overflow-hidden border border-slate-700/50">
+          <div className="bg-slate-700/50 px-6 py-4 border-b border-slate-600/50">
+            <h3 className="text-lg font-semibold text-white">
+              Week of {formatDate(selectedWeek)} - {formatDate(getWeekEnd(selectedWeek))}
+            </h3>
+          </div>
           <div className="overflow-x-auto">
             <table className="min-w-full">
               <thead className="bg-slate-700/50">
@@ -293,7 +339,7 @@ export function PayrollHistory() {
         <div className="text-center py-12">
           <Calendar className="w-16 h-16 text-slate-600 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-white mb-2">No Payroll History</h3>
-          <p className="text-slate-400">No payroll records found for {selectedYear}.</p>
+          <p className="text-slate-400">No payroll records found for the selected week.</p>
         </div>
       )}
     </div>

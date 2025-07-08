@@ -64,15 +64,26 @@ app.get('/api/today-entry', authenticate, async (req, res) => {
 });
 
 app.get('/api/user-payroll-history', authenticate, async (req, res) => {
-  const { year } = req.query;
+  const { weekStart, weekEnd } = req.query;
   
   try {
-    const [payslips] = await pool.execute(
-      `SELECT * FROM payslips 
-       WHERE user_id = ? AND YEAR(week_start) = ?
-       ORDER BY week_start DESC`,
-      [req.user.userId, year || new Date().getFullYear()]
-    );
+    let query, params;
+    
+    if (weekStart && weekEnd) {
+      // Get specific week
+      query = `SELECT * FROM payslips 
+               WHERE user_id = ? AND week_start = ? AND week_end = ?
+               ORDER BY week_start DESC`;
+      params = [req.user.userId, weekStart, weekEnd];
+    } else {
+      // Get current year if no specific week
+      query = `SELECT * FROM payslips 
+               WHERE user_id = ? AND YEAR(week_start) = ?
+               ORDER BY week_start DESC`;
+      params = [req.user.userId, new Date().getFullYear()];
+    }
+    
+    const [payslips] = await pool.execute(query, params);
     res.json(payslips);
   } catch (error) {
     console.error('Error fetching user payroll history:', error);
@@ -183,6 +194,30 @@ app.post('/api/overtime-requests/:id/approve', authenticate, async (req, res) =>
   const { approved } = req.body;
   const result = await approveOvertime(req.params.id, approved, req.user.userId);
   res.json(result);
+});
+
+app.post('/api/overtime-request', authenticate, async (req, res) => {
+  const { overtimeNote, date } = req.body;
+  
+  try {
+    const weekStart = getWeekStart(new Date(date));
+    
+    // Create a manual overtime entry for admin review
+    const now = new Date();
+    const clockIn = new Date(`${date}T16:00:00`); // Assume 4 PM start for manual OT
+    const clockOut = new Date(`${date}T18:00:00`); // Assume 2 hours of OT
+    
+    await pool.execute(
+      `INSERT INTO time_entries (user_id, clock_in, clock_out, date, week_start, overtime_requested, overtime_note) 
+       VALUES (?, ?, ?, ?, ?, TRUE, ?)`,
+      [req.user.userId, clockIn, clockOut, date, weekStart, overtimeNote]
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Manual overtime request error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
 });
 
 app.post('/api/payslips/generate', authenticate, async (req, res) => {

@@ -107,6 +107,49 @@ export function TimeTracking() {
     setIsLoading(false);
   };
 
+  const submitOvertimeRequest = async () => {
+    if (!overtimeNote.trim()) {
+      alert('Please provide a reason for overtime');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // If user is currently clocked in, clock them out with overtime
+      if (todayEntry && !todayEntry.clock_out) {
+        await performClockOut();
+      } else {
+        // Submit standalone overtime request (for manual requests)
+        const response = await fetch('http://192.168.100.60:3001/api/overtime-request', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ 
+            overtimeNote,
+            date: new Date().toISOString().split('T')[0]
+          }),
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          setShowOvertimeModal(false);
+          setOvertimeNote('');
+          alert('Overtime request submitted for admin approval!');
+          await fetchTodayEntry();
+        } else {
+          alert(data.message || 'Failed to submit overtime request');
+        }
+      }
+    } catch (error) {
+      console.error('Overtime request error:', error);
+      alert('Failed to submit overtime request');
+    }
+    setIsLoading(false);
+  };
+
   const formatTime = (timeString: string) => {
     return new Date(timeString).toLocaleTimeString('en-US', {
       hour: '2-digit',
@@ -479,11 +522,11 @@ export function TimeTracking() {
                 Cancel
               </button>
               <button
-                onClick={performClockOut}
+                onClick={submitOvertimeRequest}
                 disabled={!overtimeNote.trim() || isLoading}
                 className="flex-1 bg-gradient-to-r from-emerald-500 to-green-600 text-white py-2 px-4 rounded-lg font-medium hover:from-emerald-600 hover:to-green-700 disabled:opacity-50 transition-all duration-200"
               >
-                {isLoading ? 'Processing...' : 'Submit Request'}
+                {isLoading ? 'Processing...' : (todayEntry && !todayEntry.clock_out ? 'Clock Out & Request OT' : 'Submit Request')}
               </button>
             </div>
           </div>

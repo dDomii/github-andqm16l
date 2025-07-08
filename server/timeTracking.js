@@ -60,6 +60,12 @@ export async function clockOut(userId, overtimeNote = null) {
       [now, overtimeRequested, overtimeNote, entry.id]
     );
 
+    // If overtime was requested, set it as pending approval
+    if (overtimeRequested && overtimeNote) {
+      // The overtime_approved field remains NULL for pending requests
+      console.log('Overtime request submitted for entry:', entry.id);
+    }
+
     return { success: true, overtimeRequested };
   } catch (error) {
     console.error('Clock out error:', error);
