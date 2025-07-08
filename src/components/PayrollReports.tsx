@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Download, Calendar, DollarSign, FileText, AlertCircle, Edit2, Save, X, Eye } from 'lucide-react';
+import { Download, Calendar, PhilippinePeso, FileText, AlertCircle, Edit2, Save, X, Eye } from 'lucide-react';
 
 interface PayrollEntry {
   id: number;
@@ -605,7 +605,7 @@ export function PayrollReports() {
           ) : (
             <div className="text-center py-12">
               <div className="bg-slate-700/30 p-4 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-                <DollarSign className="w-10 h-10 text-slate-500" />
+                <PhilippinePeso className="w-10 h-10 text-slate-500" />
               </div>
               <h3 className="text-lg font-medium text-white mb-2">No Payroll Data</h3>
               <p className="text-slate-400">Generate payslips to view preview.</p>
