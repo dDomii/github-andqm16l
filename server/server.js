@@ -190,10 +190,19 @@ app.post('/api/payslips/generate', authenticate, async (req, res) => {
     return res.status(403).json({ message: 'Admin access required' });
   }
 
-  const { startDate, endDate } = req.body;
+  const { weekStart, startDate, endDate } = req.body;
   
   try {
-    const payslips = await generatePayslipsForDateRange(startDate, endDate);
+    // Support both old weekStart format and new date range format
+    let payslips;
+    if (startDate && endDate) {
+      payslips = await generatePayslipsForDateRange(startDate, endDate);
+    } else if (weekStart) {
+      payslips = await generateWeeklyPayslips(weekStart);
+    } else {
+      return res.status(400).json({ message: 'Either weekStart or startDate/endDate is required' });
+    }
+    
     res.json(payslips);
   } catch (error) {
     console.error('Error generating payslips:', error);
@@ -206,8 +215,17 @@ app.get('/api/payroll-report', authenticate, async (req, res) => {
     return res.status(403).json({ message: 'Admin access required' });
   }
 
-  const { startDate, endDate } = req.query;
-  const report = await getPayrollReport(startDate, endDate);
+  const { weekStart, startDate, endDate } = req.query;
+  
+  let report;
+  if (startDate && endDate) {
+    report = await getPayrollReport(startDate, endDate);
+  } else if (weekStart) {
+    report = await getPayrollReport(weekStart);
+  } else {
+    return res.status(400).json({ message: 'Either weekStart or startDate/endDate is required' });
+  }
+  
   res.json(report);
 });
 

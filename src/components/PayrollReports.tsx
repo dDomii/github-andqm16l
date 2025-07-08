@@ -65,7 +65,7 @@ export function PayrollReports() {
   };
 
   const generatePayslips = async () => {
-    if (!startDate) return;
+    if (!startDate || !endDate) return;
     
     setLoading(true);
     setError('');
@@ -76,7 +76,7 @@ export function PayrollReports() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ weekStart: startDate }),
+        body: JSON.stringify({ startDate, endDate }),
       });
 
       const data = await response.json();
@@ -99,10 +99,10 @@ export function PayrollReports() {
   };
 
   const fetchPayrollReport = async () => {
-    if (!startDate) return;
+    if (!startDate || !endDate) return;
     
     try {
-      const response = await fetch(`http://192.168.100.60:3001/api/payroll-report?weekStart=${startDate}`, {
+      const response = await fetch(`http://192.168.100.60:3001/api/payroll-report?startDate=${startDate}&endDate=${endDate}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();

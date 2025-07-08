@@ -90,7 +90,7 @@ export function UserManagement() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [deletingUser, setDeletingUser] = useState<User | null>(null);
-  const [expandedDepartments, setExpandedDepartments] = useState<Set<string>>(new Set(DEPARTMENTS));
+  const [expandedDepartments, setExpandedDepartments] = useState<Set<string>>(new Set());
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -299,7 +299,7 @@ export function UserManagement() {
       </div>
 
       {/* Department-wise User Lists */}
-      <div className="space-y-4">
+      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
         {DEPARTMENTS.map((department) => {
           const deptUsers = groupedUsers[department];
           const colors = DEPARTMENT_COLORS[department];
@@ -307,65 +307,63 @@ export function UserManagement() {
           const activeCount = deptUsers.filter(user => user.active).length;
 
           return (
-            <div key={department} className={`${colors.bg} backdrop-blur-sm rounded-xl shadow-lg overflow-hidden border ${colors.border}`}>
+            <div key={department} className={`${colors.bg} backdrop-blur-sm rounded-xl shadow-lg overflow-hidden border ${colors.border} h-fit`}>
               <button
                 onClick={() => toggleDepartment(department)}
-                className={`w-full px-6 py-4 bg-gradient-to-r ${colors.accent} border-b ${colors.border} flex items-center justify-between hover:opacity-80 transition-all duration-200`}
+                className={`w-full px-4 py-3 bg-gradient-to-r ${colors.accent} border-b ${colors.border} flex items-center justify-between hover:opacity-80 transition-all duration-200`}
               >
                 <div className="flex items-center gap-3">
-                  <div className={`bg-gradient-to-br ${colors.accent} p-2 rounded-lg border ${colors.border}`}>
-                    <User className={`w-5 h-5 ${colors.icon}`} />
+                  <div className={`bg-gradient-to-br ${colors.accent} p-1.5 rounded-lg border ${colors.border}`}>
+                    <User className={`w-4 h-4 ${colors.icon}`} />
                   </div>
                   <div className="text-left">
-                    <h3 className={`text-lg font-semibold ${colors.text}`}>{department}</h3>
-                    <p className="text-sm text-slate-400">
+                    <h3 className={`text-base font-semibold ${colors.text}`}>{department}</h3>
+                    <p className="text-xs text-slate-400">
                       {deptUsers.length} total • {activeCount} active
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium border ${colors.border} ${colors.text}`}>
+                <div className="flex items-center gap-2">
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium border ${colors.border} ${colors.text}`}>
                     {deptUsers.length} users
                   </span>
                   {isExpanded ? (
-                    <ChevronUp className="w-5 h-5 text-slate-400" />
+                    <ChevronUp className="w-4 h-4 text-slate-400" />
                   ) : (
-                    <ChevronDown className="w-5 h-5 text-slate-400" />
+                    <ChevronDown className="w-4 h-4 text-slate-400" />
                   )}
                 </div>
               </button>
 
               {isExpanded && (
-                <div className="divide-y divide-slate-700/30">
+                <div className="divide-y divide-slate-700/30 max-h-96 overflow-y-auto">
                   {deptUsers.length > 0 ? (
                     deptUsers.map((user) => (
-                      <div key={user.id} className="p-6 hover:bg-slate-700/20 transition-colors">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4">
-                            <div className={`bg-gradient-to-br ${colors.accent} p-3 rounded-lg border ${colors.border}`}>
+                      <div key={user.id} className="p-4 hover:bg-slate-700/20 transition-colors">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-start gap-3 flex-1 min-w-0">
+                            <div className={`bg-gradient-to-br ${colors.accent} p-2 rounded-lg border ${colors.border} flex-shrink-0`}>
                               {user.role === 'admin' ? (
-                                <Shield className={`w-5 h-5 ${colors.icon}`} />
+                                <Shield className={`w-4 h-4 ${colors.icon}`} />
                               ) : (
-                                <User className={`w-5 h-5 ${colors.icon}`} />
+                                <User className={`w-4 h-4 ${colors.icon}`} />
                               )}
                             </div>
-                            <div>
-                              <h4 className="font-semibold text-white">{user.username}</h4>
-                              <div className="flex items-center gap-3 mt-1">
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-white truncate">{user.username}</h4>
+                              <div className="flex flex-wrap gap-1 mt-1">
                                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                                   user.role === 'admin' 
                                     ? 'bg-emerald-900/20 text-emerald-400 border border-emerald-800/50' 
                                     : 'bg-blue-900/20 text-blue-400 border border-blue-800/50'
                                 }`}>
-                                  {user.role.toUpperCase()}
+                                  {user.role}
                                 </span>
-                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                  user.staff_house 
-                                    ? 'bg-purple-900/20 text-purple-400 border border-purple-800/50' 
-                                    : 'bg-slate-700/50 text-slate-400 border border-slate-600/50'
-                                }`}>
-                                  {user.staff_house ? 'Staff House' : 'No Staff House'}
-                                </span>
+                                {user.staff_house && (
+                                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-900/20 text-purple-400 border border-purple-800/50">
+                                    Staff House
+                                  </span>
+                                )}
                                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                                   user.active 
                                     ? 'bg-emerald-900/20 text-emerald-400 border border-emerald-800/50' 
@@ -374,45 +372,45 @@ export function UserManagement() {
                                   {user.active ? 'Active' : 'Inactive'}
                                 </span>
                               </div>
-                              <p className="text-sm text-slate-400 mt-1">
-                                Created {new Date(user.created_at).toLocaleDateString()}
+                              <p className="text-xs text-slate-400 mt-1">
+                                {new Date(user.created_at).toLocaleDateString()}
                               </p>
                             </div>
                           </div>
                           
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1 flex-shrink-0">
                             <button
                               onClick={() => handleEdit(user)}
-                              className="text-blue-400 hover:text-blue-300 p-2 rounded-lg hover:bg-blue-900/20 transition-all duration-200"
+                              className="text-blue-400 hover:text-blue-300 p-1.5 rounded-lg hover:bg-blue-900/20 transition-all duration-200"
                               title="Edit User"
                             >
-                              <Edit2 className="w-4 h-4" />
+                              <Edit2 className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => handleTimeEdit(user.id)}
-                              className="text-emerald-400 hover:text-emerald-300 p-2 rounded-lg hover:bg-emerald-900/20 transition-all duration-200"
+                              className="text-emerald-400 hover:text-emerald-300 p-1.5 rounded-lg hover:bg-emerald-900/20 transition-all duration-200"
                               title="Adjust Time"
                             >
-                              <Clock className="w-4 h-4" />
+                              <Clock className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => handleDeleteClick(user)}
-                              className="text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-900/20 transition-all duration-200"
+                              className="text-red-400 hover:text-red-300 p-1.5 rounded-lg hover:bg-red-900/20 transition-all duration-200"
                               title="Delete User"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <div className="p-8 text-center">
-                      <div className={`bg-gradient-to-br ${colors.accent} p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center border ${colors.border}`}>
-                        <User className={`w-8 h-8 ${colors.icon}`} />
+                    <div className="p-6 text-center">
+                      <div className={`bg-gradient-to-br ${colors.accent} p-3 rounded-full w-12 h-12 mx-auto mb-3 flex items-center justify-center border ${colors.border}`}>
+                        <User className={`w-6 h-6 ${colors.icon}`} />
                       </div>
-                      <h3 className="text-lg font-medium text-white mb-2">No Users in {department}</h3>
-                      <p className="text-slate-400">Add users to this department to get started.</p>
+                      <h3 className="text-sm font-medium text-white mb-1">No Users</h3>
+                      <p className="text-xs text-slate-400">No users in this department.</p>
                     </div>
                   )}
                 </div>
