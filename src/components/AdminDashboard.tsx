@@ -7,7 +7,7 @@ import { LiveReports } from './LiveReports';
 import { 
   Users, 
   Clock, 
-  DollarSign, 
+  PhilippinePeso, 
   Settings,
   Activity,
   Calendar
