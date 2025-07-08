@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Plus, Edit2, User, Shield, Clock, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Edit2, User, Shield, Clock, Trash2, ChevronDown, ChevronUp, Download, Search, Filter } from 'lucide-react';
 
 interface User {
   id: number;
@@ -92,6 +92,8 @@ export function UserManagement() {
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [deletingUser, setDeletingUser] = useState<User | null>(null);
   const [expandedDepartments, setExpandedDepartments] = useState<Set<string>>(new Set());
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedDepartmentFilter, setSelectedDepartmentFilter] = useState('');
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -271,27 +273,74 @@ export function UserManagement() {
     setExpandedDepartments(newExpanded);
   };
 
+  const exportToCSV = () => {
+    if (users.length === 0) return;
+
+    const headers = [
+      'Username',
+      'Role',
+      'Department',
+      'GCash Number',
+      'Staff House',
+      'Status',
+      'Created Date'
+    ];
+
+    const rows = users.map(user => [
+      user.username,
+      user.role,
+      user.department,
+      user.gcash_number || 'N/A',
+      user.staff_house ? 'Yes' : 'No',
+      user.active ? 'Active' : 'Inactive',
+      new Date(user.created_at).toLocaleDateString()
+    ]);
+
+    const csvContent = [headers, ...rows]
+      .map(row => row.map(field => `"${field}"`).join(','))
+      .join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `users_export_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+  };
+
   // Group users by department
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         user.department.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesDepartment = selectedDepartmentFilter === '' || user.department === selectedDepartmentFilter;
+    return matchesSearch && matchesDepartment;
+  });
+
   const groupedUsers = DEPARTMENTS.reduce((acc, dept) => {
-    acc[dept] = users.filter(user => user.department === dept);
+    acc[dept] = filteredUsers.filter(user => user.department === dept);
     return acc;
   }, {} as Record<string, User[]>);
 
   const totalUsers = users.length;
-  const activeUsers = users.filter(user => user.active).length;
+  const activeUsers = filteredUsers.filter(user => user.active).length;
+  const totalFiltered = filteredUsers.length;
 
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-2xl font-bold text-white">User Management</h2>
-          <p className="text-slate-400">Manage users organized by department</p>
+          <p className="text-slate-400">
+            Manage users organized by department • {totalFiltered} of {totalUsers} users shown
+          </p>
         </div>
         <div className="flex items-center gap-4">
-          <div className="text-right">
-            <p className="text-sm text-slate-400">Total Users</p>
-            <p className="text-lg font-semibold text-white">{totalUsers} ({activeUsers} active)</p>
-          </div>
+          <button
+            onClick={exportToCSV}
+            className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 transition-all duration-200 flex items-center gap-2 shadow-lg"
+          >
+            <Download className="w-4 h-4" />
+            Export CSV
+          </button>
           <button
             onClick={handleAdd}
             className="bg-gradient-to-r from-emerald-500 to-green-600 text-white px-4 py-2 rounded-lg font-medium hover:from-emerald-600 hover:to-green-700 transition-all duration-200 flex items-center gap-2 shadow-lg"
@@ -299,6 +348,60 @@ export function UserManagement() {
             <Plus className="w-4 h-4" />
             Add User
           </button>
+        </div>
+      </div>
+
+      {/* Search and Filter Controls */}
+      <div className="bg-slate-800/90 backdrop-blur-sm rounded-xl p-6 mb-6 shadow-lg border border-slate-700/50">
+        <div className="grid md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Search Users
+            </label>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-white placeholder-slate-400"
+              placeholder="Search by username or department..."
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Filter by Department
+            </label>
+            <select
+              value={selectedDepartmentFilter}
+              onChange={(e) => setSelectedDepartmentFilter(e.target.value)}
+              className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-white"
+            >
+              <option value="">All Departments</option>
+              {DEPARTMENTS.map(dept => (
+                <option key={dept} value={dept}>{dept}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Statistics
+            </label>
+            <div className="bg-slate-700/30 rounded-lg p-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-400">Total:</span>
+                <span className="text-white font-medium">{totalFiltered}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-400">Active:</span>
+                <span className="text-emerald-400 font-medium">{activeUsers}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-400">Inactive:</span>
+                <span className="text-red-400 font-medium">{totalFiltered - activeUsers}</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -343,7 +446,7 @@ export function UserManagement() {
                 <div className="divide-y divide-slate-700/30 max-h-80 overflow-y-auto">
                   {deptUsers.length > 0 ? (
                     deptUsers.map((user) => (
-                      <div key={user.id} className="p-3 hover:bg-slate-700/20 transition-colors">
+                      <div key={user.id} className="p-4 hover:bg-slate-700/20 transition-all duration-200 border-l-2 border-transparent hover:border-emerald-500/50">
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex items-start gap-3 flex-1 min-w-0">
                             <div className={`bg-gradient-to-br ${colors.accent} p-1.5 rounded-lg border ${colors.border} flex-shrink-0`}>
@@ -354,63 +457,62 @@ export function UserManagement() {
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h4 className="font-medium text-white text-sm truncate">{user.username}</h4>
+                              <div className="flex items-center gap-2 mb-2">
+                                <h4 className="font-semibold text-white text-base truncate">{user.username}</h4>
+                                {user.role === 'admin' && (
+                                  <span className="bg-gradient-to-r from-emerald-500/20 to-green-600/20 text-emerald-400 px-2 py-0.5 rounded-full text-xs font-medium border border-emerald-800/50">
+                                    ADMIN
+                                  </span>
+                                )}
+                              </div>
                               <div className="flex flex-wrap gap-1 mt-1">
                                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                  user.role === 'admin' 
-                                    ? 'bg-emerald-900/20 text-emerald-400' 
-                                    : 'bg-blue-900/20 text-blue-400'
-                                }`}>
-                                  {user.role}
-                                </span>
-                                {user.staff_house && (
-                                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-900/20 text-purple-400">
-                                    Staff House
-                                  </span>
-                                )}
-                                {user.gcash_number && (
-                                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-900/20 text-green-400">
-                                    GCash
-                                  </span>
-                                )}
-                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                                   user.active 
-                                    ? 'bg-emerald-900/20 text-emerald-400' 
-                                    : 'bg-red-900/20 text-red-400'
+                                    ? 'bg-emerald-900/30 text-emerald-300 border border-emerald-700/50' 
+                                    : 'bg-red-900/30 text-red-300 border border-red-700/50'
                                 }`}>
                                   {user.active ? 'Active' : 'Inactive'}
                                 </span>
-                              </div>
-                              <p className="text-xs text-slate-400 mt-1">
-                                {new Date(user.created_at).toLocaleDateString()}
-                                {user.gcash_number && (
-                                  <span className="block">GCash: {user.gcash_number}</span>
+                                {user.staff_house && (
+                                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-900/30 text-purple-300 border border-purple-700/50">
+                                    Staff House
+                                  </span>
                                 )}
-                              </p>
+                              </div>
+                              <div className="mt-2 space-y-1">
+                                <div className="flex items-center gap-2 text-xs">
+                                  <span className="text-slate-500">Created:</span>
+                                  <span className="text-slate-300">{new Date(user.created_at).toLocaleDateString()}</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-xs">
+                                  <span className="text-slate-500">GCash:</span>
+                                  <span className="text-green-400 font-mono">{user.gcash_number || 'Not provided'}</span>
+                                </div>
+                              </div>
                             </div>
                           </div>
                           
                           <div className="flex items-center gap-1 flex-shrink-0">
                             <button
                               onClick={() => handleEdit(user)}
-                              className="text-blue-400 hover:text-blue-300 p-1.5 rounded-lg hover:bg-blue-900/20 transition-all duration-200"
+                              className="text-blue-400 hover:text-blue-300 p-2 rounded-lg hover:bg-blue-900/30 transition-all duration-200 border border-transparent hover:border-blue-700/50"
                               title="Edit User"
                             >
-                              <Edit2 className="w-3.5 h-3.5" />
+                              <Edit2 className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => handleTimeEdit(user.id)}
-                              className="text-emerald-400 hover:text-emerald-300 p-1.5 rounded-lg hover:bg-emerald-900/20 transition-all duration-200"
+                              className="text-emerald-400 hover:text-emerald-300 p-2 rounded-lg hover:bg-emerald-900/30 transition-all duration-200 border border-transparent hover:border-emerald-700/50"
                               title="Adjust Time"
                             >
-                              <Clock className="w-3.5 h-3.5" />
+                              <Clock className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => handleDeleteClick(user)}
-                              className="text-red-400 hover:text-red-300 p-1.5 rounded-lg hover:bg-red-900/20 transition-all duration-200"
+                              className="text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-900/30 transition-all duration-200 border border-transparent hover:border-red-700/50"
                               title="Delete User"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
                         </div>
@@ -421,8 +523,12 @@ export function UserManagement() {
                       <div className={`bg-gradient-to-br ${colors.accent} p-2 rounded-full w-8 h-8 mx-auto mb-2 flex items-center justify-center border ${colors.border}`}>
                         <User className={`w-4 h-4 ${colors.icon}`} />
                       </div>
-                      <h3 className="text-sm font-medium text-white mb-1">No Users</h3>
-                      <p className="text-xs text-slate-400">No users in this department.</p>
+                      <h3 className="text-sm font-medium text-white mb-1">No Users Found</h3>
+                      <p className="text-xs text-slate-400">
+                        {searchTerm || selectedDepartmentFilter 
+                          ? 'No users match your search criteria.' 
+                          : 'No users in this department.'}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -500,7 +606,7 @@ export function UserManagement() {
 
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-1">
-                  GCash Number (optional)
+                  GCash Number <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="text"
@@ -508,6 +614,7 @@ export function UserManagement() {
                   onChange={(e) => setFormData({ ...formData, gcash_number: e.target.value })}
                   className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-white"
                   placeholder="09XXXXXXXXX"
+                  required
                 />
               </div>
 

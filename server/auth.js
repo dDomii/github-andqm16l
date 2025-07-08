@@ -58,11 +58,16 @@ export function verifyToken(token) {
 
 export async function createUser(userData) {
   try {
+    // Validate required fields
+    if (!userData.gcash_number || userData.gcash_number.trim() === '') {
+      return { success: false, message: 'GCash number is required' };
+    }
+    
     const hashedPassword = await bcrypt.hash(userData.password, 10);
     
     const [result] = await pool.execute(
       'INSERT INTO users (username, password, role, department, staff_house, gcash_number, active) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [userData.username, hashedPassword, userData.role, userData.department, userData.staff_house, userData.gcash_number || null, userData.active]
+      [userData.username, hashedPassword, userData.role, userData.department, userData.staff_house, userData.gcash_number.trim(), userData.active]
     );
 
     return { success: true, userId: result.insertId };
@@ -77,8 +82,13 @@ export async function createUser(userData) {
 
 export async function updateUser(userId, userData) {
   try {
+    // Validate required fields for updates
+    if (!userData.gcash_number || userData.gcash_number.trim() === '') {
+      return { success: false, message: 'GCash number is required' };
+    }
+    
     let query = 'UPDATE users SET department = ?, staff_house = ?, gcash_number = ?, active = ?';
-    let params = [userData.department, userData.staff_house, userData.gcash_number || null, userData.active];
+    let params = [userData.department, userData.staff_house, userData.gcash_number.trim(), userData.active];
 
     if (userData.password) {
       const hashedPassword = await bcrypt.hash(userData.password, 10);
