@@ -31,13 +31,11 @@ export function Layout({ children }: LayoutProps) {
 
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-3">
-                <div className="bg-slate-700/50 p-2 rounded-lg">
                   {user?.role === 'admin' ? (
                     <img src="./src/assets/Media.jpg" alt="The Backroom Logo" class="w-auto h-9 object-contain"/>
                   ) : (
                     <img src="https://www.inlifemagazine.com/wp-content/uploads/2015/12/R.jpg" alt="The Backroom Logo" class="w-auto h-9 object-contain"/>
                   )}
-                </div>
                 <div>
                   <p className="text-sm font-medium text-white">{user?.username}</p>
                   <p className="text-xs text-slate-400">{user?.department}</p>
