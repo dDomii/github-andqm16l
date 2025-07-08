@@ -7,6 +7,7 @@ interface User {
   username: string;
   role: string;
   department: string;
+  gcash_number: string;
   staff_house: boolean;
   active: boolean;
   created_at: string;
@@ -96,6 +97,7 @@ export function UserManagement() {
     password: '',
     role: 'ojt',
     department: DEPARTMENTS[0],
+    gcash_number: '',
     staff_house: false,
     active: true
   });
@@ -223,6 +225,7 @@ export function UserManagement() {
       password: '',
       role: 'ojt',
       department: DEPARTMENTS[0],
+      gcash_number: '',
       staff_house: false,
       active: true
     });
@@ -236,6 +239,7 @@ export function UserManagement() {
       password: '',
       role: user.role,
       department: user.department,
+      gcash_number: user.gcash_number || '',
       staff_house: user.staff_house,
       active: user.active
     });
@@ -492,6 +496,19 @@ export function UserManagement() {
                     <option key={dept} value={dept}>{dept}</option>
                   ))}
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1">
+                  GCash Number (optional)
+                </label>
+                <input
+                  type="text"
+                  value={formData.gcash_number}
+                  onChange={(e) => setFormData({ ...formData, gcash_number: e.target.value })}
+                  className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-white"
+                  placeholder="09XXXXXXXXX"
+                />
               </div>
 
               <div className="flex items-center space-x-4">

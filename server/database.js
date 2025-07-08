@@ -32,6 +32,7 @@ export async function initializeDatabase() {
         department VARCHAR(100),
         staff_house BOOLEAN DEFAULT FALSE,
         gcash_number VARCHAR(20),
+        gcash_number VARCHAR(20),
         active BOOLEAN DEFAULT TRUE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
