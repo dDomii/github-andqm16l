@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Calendar, DollarSign, Clock, TrendingUp, Download } from 'lucide-react';
+import { Calendar, PhilippinePeso, Clock, TrendingUp, Download } from 'lucide-react';
 
 interface PayrollEntry {
   id: number;
