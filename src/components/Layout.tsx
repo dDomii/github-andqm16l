@@ -18,7 +18,7 @@ export function Layout({ children }: LayoutProps) {
             <div className="flex items-center gap-3">
               <div className="bg-gradient-to-br from-emerald-400 to-green-500 p-2 rounded-lg shadow-lg">
                 <img 
-                  src="https://www.inlifemagazine.com/wp-content/uploads/2015/12/R.jpg" 
+                  src="https://thebackroomop.com/hs-fs/hubfs/The%20Back%20Room%20Logo%20WHT_optimised.png?width=100&height=94&name=The%20Back%20Room%20Logo%20WHT_optimised.png" 
                   alt="The Backroom Logo" 
                   className="w-8 h-8 object-contain"
                 />
