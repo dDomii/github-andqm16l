@@ -168,7 +168,7 @@ export function PayrollHistory() {
               <p className="text-2xl font-bold text-emerald-400">{formatCurrency(stats.totalEarnings)}</p>
             </div>
             <div className="bg-gradient-to-br from-emerald-500/20 to-green-600/20 p-3 rounded-lg">
-              <DollarSign className="w-6 h-6 text-emerald-400" />
+              <PhilippinePeso className="w-6 h-6 text-emerald-400" />
             </div>
           </div>
         </div>
