@@ -27,12 +27,21 @@ export function PayrollHistory() {
   const { token, user } = useAuth();
 
   useEffect(() => {
-    // Set current week as default
+    fetchPayrollHistory();
+  }, []);
+
+  useEffect(() => {
+    if (selectedWeek) {
+      fetchPayrollHistory();
+    }
+  }, [selectedWeek, selectedDay]);
+
+  useEffect(() => {
+    // Set current week as default after component mounts
     const today = new Date();
     const currentWeekStart = getWeekStart(today);
     setSelectedWeek(currentWeekStart);
-    fetchPayrollHistory();
-  }, [selectedWeek]);
+  }, []);
 
   const getWeekStart = (date: Date) => {
     const d = new Date(date);
@@ -93,6 +102,8 @@ export function PayrollHistory() {
   };
 
   const fetchPayrollHistory = async () => {
+    if (!selectedWeek) return;
+    
     setLoading(true);
     try {
       let url = `http://192.168.100.60:3001/api/user-payroll-history`;
@@ -113,6 +124,7 @@ export function PayrollHistory() {
       setPayrollHistory(data);
     } catch (error) {
       console.error('Error fetching payroll history:', error);
+      setPayrollHistory([]); // Reset to empty array on error
     }
     setLoading(false);
   };
