@@ -91,7 +91,7 @@ export function UserManagement() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [deletingUser, setDeletingUser] = useState<User | null>(null);
-  const [expandedDepartments, setExpandedDepartments] = useState<Set<string>>(new Set());
+  const [expandedDepartments, setExpandedDepartments] = useState<Set<string>>(new Set(DEPARTMENTS));
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDepartmentFilter, setSelectedDepartmentFilter] = useState('');
   const [formData, setFormData] = useState({
@@ -353,60 +353,64 @@ export function UserManagement() {
 
       {/* Search and Filter Controls */}
       <div className="bg-slate-800/90 backdrop-blur-sm rounded-xl p-6 mb-6 shadow-lg border border-slate-700/50">
-        <div className="grid md:grid-cols-3 gap-4">
+        <div className="grid md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">
               Search Users
             </label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-white placeholder-slate-400"
+              className="w-full pl-10 pr-4 py-2 bg-slate-700/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-white placeholder-slate-400"
               placeholder="Search by username or department..."
             />
+            </div>
           </div>
           
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">
               Filter by Department
             </label>
+            <div className="relative">
+              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
             <select
               value={selectedDepartmentFilter}
               onChange={(e) => setSelectedDepartmentFilter(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-white"
+              className="w-full pl-10 pr-4 py-2 bg-slate-700/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-white"
             >
               <option value="">All Departments</option>
               {DEPARTMENTS.map(dept => (
                 <option key={dept} value={dept}>{dept}</option>
               ))}
             </select>
+            </div>
           </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              Statistics
-            </label>
-            <div className="bg-slate-700/30 rounded-lg p-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-400">Total:</span>
-                <span className="text-white font-medium">{totalFiltered}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-400">Active:</span>
-                <span className="text-emerald-400 font-medium">{activeUsers}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-400">Inactive:</span>
-                <span className="text-red-400 font-medium">{totalFiltered - activeUsers}</span>
-              </div>
+        </div>
+        
+        {/* Statistics Row */}
+        <div className="mt-4 pt-4 border-t border-slate-700/50">
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <p className="text-2xl font-bold text-white">{totalFiltered}</p>
+              <p className="text-sm text-slate-400">Total Users</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-emerald-400">{activeUsers}</p>
+              <p className="text-sm text-slate-400">Active Users</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-red-400">{totalFiltered - activeUsers}</p>
+              <p className="text-sm text-slate-400">Inactive Users</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Department-wise User Lists */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {DEPARTMENTS.map((department) => {
           const deptUsers = groupedUsers[department];
           const colors = DEPARTMENT_COLORS[department];
