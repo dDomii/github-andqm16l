@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { OvertimeApproval } from './OvertimeApproval';
 import { TimeLogs } from './TimeLogs';
-import { Download, Calendar, PhilippinePeso, FileText, AlertCircle, Edit2, Save, X, Eye, Users, CheckSquare, Square, RefreshCw } from 'lucide-react';
+import { Download, Calendar, PhilippinePeso, FileText, AlertCircle, Edit2, Save, X, Eye, Users, CheckSquare, Square, RefreshCw, FileDown } from 'lucide-react';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 interface PayrollEntry {
   id: number;
@@ -54,6 +56,7 @@ export function PayrollReports() {
   const [activeTab, setActiveTab] = useState<'generate' | 'preview' | 'overtime' | 'logs'>('generate');
   const [payslipLogs, setPayslipLogs] = useState<any[]>([]);
   const [generationMode, setGenerationMode] = useState<'range' | 'specific'>('range');
+  const [isCalculating, setIsCalculating] = useState(false);
   const { token } = useAuth();
 
   useEffect(() => {
@@ -250,9 +253,17 @@ export function PayrollReports() {
 
   const handleEdit = (entry: PayrollEntry) => {
     setEditingEntry(entry.id);
+    
+    // Format datetime values for input fields
+    const formatForInput = (dateTime: string) => {
+      if (!dateTime) return '';
+      const date = new Date(dateTime);
+      return date.toISOString().slice(0, 16); // Format: YYYY-MM-DDTHH:MM
+    };
+    
     setEditData({
-      clock_in_time: entry.clock_in_time ? new Date(entry.clock_in_time).toISOString().slice(0, 16) : '',
-      clock_out_time: entry.clock_out_time ? new Date(entry.clock_out_time).toISOString().slice(0, 16) : '',
+      clock_in_time: formatForInput(entry.clock_in_time),
+      clock_out_time: formatForInput(entry.clock_out_time),
       total_hours: entry.total_hours,
       overtime_hours: entry.overtime_hours,
       undertime_hours: entry.undertime_hours,
@@ -261,6 +272,75 @@ export function PayrollReports() {
       undertime_deduction: entry.undertime_deduction,
       staff_house_deduction: entry.staff_house_deduction
     });
+  };
+
+  // Auto-calculate payroll when time fields change
+  const calculatePayrollFromTime = (clockIn: string, clockOut: string, isStaffHouse: boolean = false) => {
+    if (!clockIn || !clockOut) return null;
+    
+    const clockInTime = new Date(clockIn);
+    const clockOutTime = new Date(clockOut);
+    
+    if (clockOutTime <= clockInTime) return null;
+    
+    // Calculate total worked hours
+    const totalWorkedHours = (clockOutTime.getTime() - clockInTime.getTime()) / (1000 * 60 * 60);
+    
+    // Check for late clock in (after 7:00 AM)
+    const shiftStart = new Date(clockInTime);
+    shiftStart.setHours(7, 0, 0, 0);
+    const lateHours = clockInTime > shiftStart ? (clockInTime.getTime() - shiftStart.getTime()) / (1000 * 60 * 60) : 0;
+    
+    // Check for overtime (after 3:30 PM with 30-minute grace period = 4:00 PM)
+    const shiftEnd = new Date(clockInTime);
+    shiftEnd.setHours(16, 0, 0, 0); // 4:00 PM (with grace period)
+    const overtimeHours = clockOutTime > shiftEnd ? (clockOutTime.getTime() - shiftEnd.getTime()) / (1000 * 60 * 60) : 0;
+    
+    // Calculate pay components
+    const baseSalary = totalWorkedHours * 25; // ₱25/hour
+    const overtimePay = overtimeHours * 35; // ₱35/hour for overtime
+    const undertimeDeduction = lateHours * 25; // ₱25/hour deduction for late
+    const staffHouseDeduction = isStaffHouse ? 50 : 0; // ₱50/day for staff house (prorated)
+    
+    return {
+      total_hours: totalWorkedHours,
+      overtime_hours: overtimeHours,
+      undertime_hours: lateHours,
+      base_salary: baseSalary,
+      overtime_pay: overtimePay,
+      undertime_deduction: undertimeDeduction,
+      staff_house_deduction: staffHouseDeduction
+    };
+  };
+
+  // Handle time field changes with auto-calculation
+  const handleTimeChange = (field: string, value: string) => {
+    const newEditData = { ...editData, [field]: value };
+    setEditData(newEditData);
+    
+    // Auto-calculate if both times are present
+    if (newEditData.clock_in_time && newEditData.clock_out_time) {
+      setIsCalculating(true);
+      
+      // Find the current entry to check staff house status
+      const currentEntry = payrollData.find(entry => entry.id === editingEntry);
+      const isStaffHouse = currentEntry ? currentEntry.username.includes('staff_house') : false; // You might need to adjust this logic
+      
+      const calculated = calculatePayrollFromTime(
+        newEditData.clock_in_time,
+        newEditData.clock_out_time,
+        isStaffHouse
+      );
+      
+      if (calculated) {
+        setEditData(prev => ({
+          ...prev,
+          ...calculated
+        }));
+      }
+      
+      setTimeout(() => setIsCalculating(false), 500);
+    }
   };
 
   const handleSave = async (entryId: number) => {
@@ -395,6 +475,158 @@ export function PayrollReports() {
     
     link.download = filename;
     link.click();
+  };
+
+  const exportToPDF = () => {
+    if (payrollData.length === 0) return;
+
+    const pdf = new jsPDF();
+    const pageWidth = pdf.internal.pageSize.width;
+    const pageHeight = pdf.internal.pageSize.height;
+    let yPosition = 20;
+
+    // Group by department
+    const groupedData = DEPARTMENTS.reduce((acc, dept) => {
+      acc[dept] = payrollData.filter(entry => entry.department === dept);
+      return acc;
+    }, {} as Record<string, PayrollEntry[]>);
+
+    // Title page
+    pdf.setFontSize(20);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('PAYROLL REPORT', pageWidth / 2, yPosition, { align: 'center' });
+    
+    yPosition += 10;
+    pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'normal');
+    const dateRange = selectedDates.length > 0 
+      ? `${selectedDates[0]} to ${selectedDates[selectedDates.length - 1]}`
+      : 'Selected Period';
+    pdf.text(`Period: ${dateRange}`, pageWidth / 2, yPosition, { align: 'center' });
+    
+    yPosition += 10;
+    pdf.text(`Generated: ${new Date().toLocaleDateString()}`, pageWidth / 2, yPosition, { align: 'center' });
+    
+    yPosition += 20;
+
+    // Summary statistics
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('SUMMARY', 20, yPosition);
+    yPosition += 10;
+    
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(`Total Employees: ${payrollData.length}`, 20, yPosition);
+    pdf.text(`Total Salary: ₱${totalSalary.toFixed(2)}`, 120, yPosition);
+    yPosition += 6;
+    pdf.text(`Total Overtime: ₱${totalOvertime.toFixed(2)}`, 20, yPosition);
+    pdf.text(`Total Deductions: ₱${totalDeductions.toFixed(2)}`, 120, yPosition);
+    yPosition += 20;
+
+    // Department-wise payslips
+    DEPARTMENTS.forEach((department) => {
+      const deptData = groupedData[department];
+      if (deptData.length === 0) return;
+
+      // Check if we need a new page
+      if (yPosition > pageHeight - 60) {
+        pdf.addPage();
+        yPosition = 20;
+      }
+
+      // Department header
+      pdf.setFillColor(71, 85, 105); // slate-600
+      pdf.rect(20, yPosition - 5, pageWidth - 40, 12, 'F');
+      
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(department.toUpperCase(), 25, yPosition + 3);
+      
+      const deptTotal = deptData.reduce((sum, entry) => sum + (parseFloat(entry.total_salary) || 0), 0);
+      pdf.text(`₱${deptTotal.toFixed(2)}`, pageWidth - 25, yPosition + 3, { align: 'right' });
+      
+      yPosition += 15;
+      pdf.setTextColor(0, 0, 0);
+
+      // Table headers
+      const headers = [
+        'Employee',
+        'Clock In',
+        'Clock Out', 
+        'Hours',
+        'OT Hours',
+        'Base Pay',
+        'OT Pay',
+        'Deductions',
+        'Total'
+      ];
+
+      const tableData = deptData.map(entry => [
+        entry.username,
+        formatTime(entry.clock_in_time),
+        formatTime(entry.clock_out_time),
+        (parseFloat(entry.total_hours) || 0).toFixed(1),
+        (parseFloat(entry.overtime_hours) || 0).toFixed(1),
+        `₱${(parseFloat(entry.base_salary) || 0).toFixed(2)}`,
+        `₱${(parseFloat(entry.overtime_pay) || 0).toFixed(2)}`,
+        `₱${((parseFloat(entry.undertime_deduction) || 0) + (parseFloat(entry.staff_house_deduction) || 0)).toFixed(2)}`,
+        `₱${(parseFloat(entry.total_salary) || 0).toFixed(2)}`
+      ]);
+
+      // Use autoTable for better formatting
+      (pdf as any).autoTable({
+        head: [headers],
+        body: tableData,
+        startY: yPosition,
+        theme: 'grid',
+        headStyles: {
+          fillColor: [16, 185, 129], // emerald-500
+          textColor: [255, 255, 255],
+          fontSize: 8,
+          fontStyle: 'bold'
+        },
+        bodyStyles: {
+          fontSize: 7,
+          cellPadding: 2
+        },
+        columnStyles: {
+          0: { cellWidth: 25 }, // Employee
+          1: { cellWidth: 18 }, // Clock In
+          2: { cellWidth: 18 }, // Clock Out
+          3: { cellWidth: 15 }, // Hours
+          4: { cellWidth: 15 }, // OT Hours
+          5: { cellWidth: 20 }, // Base Pay
+          6: { cellWidth: 20 }, // OT Pay
+          7: { cellWidth: 20 }, // Deductions
+          8: { cellWidth: 20 }  // Total
+        },
+        margin: { left: 20, right: 20 },
+        didDrawPage: function(data: any) {
+          yPosition = data.cursor.y + 10;
+        }
+      });
+
+      yPosition += 10;
+    });
+
+    // Footer on last page
+    const pageCount = pdf.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      pdf.setPage(i);
+      pdf.setFontSize(8);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`Page ${i} of ${pageCount}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+      pdf.text('Generated by Wither - OJT Daily Time Record', pageWidth / 2, pageHeight - 5, { align: 'center' });
+    }
+
+    // Save the PDF
+    const filename = selectedDates.length > 0 
+      ? `payroll_report_${selectedDates[0]}_to_${selectedDates[selectedDates.length - 1]}.pdf`
+      : `payroll_report_${new Date().toISOString().split('T')[0]}.pdf`;
+    
+    pdf.save(filename);
   };
 
   const formatCurrency = (amount: number) => {
@@ -687,13 +919,22 @@ export function PayrollReports() {
                   {loading ? 'Releasing...' : 'Release Payslips'}
                 </button>
               </div>
-              <button
-                onClick={exportToCSV}
-                className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:from-purple-600 hover:to-purple-700 transition-all duration-200 flex items-center gap-2 shadow-lg"
-              >
-                <Download className="w-4 h-4" />
-                Export CSV
-              </button>
+              <div className="flex gap-4">
+                <button
+                  onClick={exportToCSV}
+                  className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:from-purple-600 hover:to-purple-700 transition-all duration-200 flex items-center gap-2 shadow-lg"
+                >
+                  <Download className="w-4 h-4" />
+                  Export CSV
+                </button>
+                <button
+                  onClick={exportToPDF}
+                  className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-lg font-medium hover:from-red-600 hover:to-red-700 transition-all duration-200 flex items-center gap-2 shadow-lg"
+                >
+                  <FileDown className="w-4 h-4" />
+                  Export PDF
+                </button>
+              </div>
             </div>
           )}
 
@@ -776,18 +1017,26 @@ export function PayrollReports() {
                               <td className="py-3 px-4">
                                 {editingEntry === entry.id ? (
                                   <div className="space-y-2">
+                                    <label className="text-xs text-slate-400">Clock In:</label>
                                     <input
                                       type="datetime-local"
                                       value={editData.clock_in_time || ''}
-                                      onChange={(e) => setEditData({ ...editData, clock_in_time: e.target.value })}
-                                      className="w-full text-xs px-2 py-1 bg-slate-700/50 border border-slate-600 rounded text-white"
+                                      onChange={(e) => handleTimeChange('clock_in_time', e.target.value)}
+                                      className="w-full text-xs px-2 py-1 bg-slate-700/50 border border-slate-600 rounded text-white focus:ring-2 focus:ring-emerald-500"
                                     />
+                                    <label className="text-xs text-slate-400">Clock Out:</label>
                                     <input
                                       type="datetime-local"
                                       value={editData.clock_out_time || ''}
-                                      onChange={(e) => setEditData({ ...editData, clock_out_time: e.target.value })}
-                                      className="w-full text-xs px-2 py-1 bg-slate-700/50 border border-slate-600 rounded text-white"
+                                      onChange={(e) => handleTimeChange('clock_out_time', e.target.value)}
+                                      className="w-full text-xs px-2 py-1 bg-slate-700/50 border border-slate-600 rounded text-white focus:ring-2 focus:ring-emerald-500"
                                     />
+                                    {isCalculating && (
+                                      <div className="text-xs text-emerald-400 flex items-center gap-1">
+                                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-emerald-400"></div>
+                                        Calculating...
+                                      </div>
+                                    )}
                                   </div>
                                 ) : (
                                   <div className="text-sm">
@@ -799,19 +1048,23 @@ export function PayrollReports() {
                               <td className="py-3 px-4 text-right">
                                 {editingEntry === entry.id ? (
                                   <div className="space-y-1">
+                                    <label className="text-xs text-slate-400">Total Hours:</label>
                                     <input
                                       type="number"
                                       step="0.01"
                                       value={editData.total_hours || ''}
                                       onChange={(e) => setEditData({ ...editData, total_hours: parseFloat(e.target.value) || 0 })}
-                                      className="w-16 text-xs px-1 py-1 bg-slate-700/50 border border-slate-600 rounded text-right text-white"
+                                      className="w-20 text-xs px-2 py-1 bg-slate-700/50 border border-slate-600 rounded text-right text-white focus:ring-2 focus:ring-emerald-500"
+                                      readOnly={isCalculating}
                                     />
+                                    <label className="text-xs text-slate-400">Late Hours:</label>
                                     <input
                                       type="number"
                                       step="0.01"
                                       value={editData.undertime_hours || ''}
                                       onChange={(e) => setEditData({ ...editData, undertime_hours: parseFloat(e.target.value) || 0 })}
-                                      className="w-16 text-xs px-1 py-1 bg-slate-700/50 border border-slate-600 rounded text-right text-white"
+                                      className="w-20 text-xs px-2 py-1 bg-slate-700/50 border border-slate-600 rounded text-right text-white focus:ring-2 focus:ring-emerald-500"
+                                      readOnly={isCalculating}
                                     />
                                   </div>
                                 ) : (
@@ -830,7 +1083,8 @@ export function PayrollReports() {
                                     step="0.01"
                                     value={editData.overtime_hours || ''}
                                     onChange={(e) => setEditData({ ...editData, overtime_hours: parseFloat(e.target.value) || 0 })}
-                                    className="w-16 text-xs px-1 py-1 bg-slate-700/50 border border-slate-600 rounded text-right text-white"
+                                    className="w-20 text-xs px-2 py-1 bg-slate-700/50 border border-slate-600 rounded text-right text-white focus:ring-2 focus:ring-emerald-500"
+                                    readOnly={isCalculating}
                                   />
                                 ) : (
                                   (parseFloat(entry.overtime_hours) || 0) > 0 ? `${(parseFloat(entry.overtime_hours) || 0).toFixed(2)}h` : '-'
@@ -843,7 +1097,8 @@ export function PayrollReports() {
                                     step="0.01"
                                     value={editData.base_salary || ''}
                                     onChange={(e) => setEditData({ ...editData, base_salary: parseFloat(e.target.value) || 0 })}
-                                    className="w-20 text-xs px-1 py-1 bg-slate-700/50 border border-slate-600 rounded text-right text-white"
+                                    className="w-24 text-xs px-2 py-1 bg-slate-700/50 border border-slate-600 rounded text-right text-white focus:ring-2 focus:ring-emerald-500"
+                                    readOnly={isCalculating}
                                   />
                                 ) : (
                                   formatCurrency(parseFloat(entry.base_salary) || 0)
@@ -856,7 +1111,8 @@ export function PayrollReports() {
                                     step="0.01"
                                     value={editData.overtime_pay || ''}
                                     onChange={(e) => setEditData({ ...editData, overtime_pay: parseFloat(e.target.value) || 0 })}
-                                    className="w-20 text-xs px-1 py-1 bg-slate-700/50 border border-slate-600 rounded text-right text-white"
+                                    className="w-24 text-xs px-2 py-1 bg-slate-700/50 border border-slate-600 rounded text-right text-white focus:ring-2 focus:ring-emerald-500"
+                                    readOnly={isCalculating}
                                   />
                                 ) : (
                                   (parseFloat(entry.overtime_pay) || 0) > 0 ? formatCurrency(parseFloat(entry.overtime_pay) || 0) : '-'
@@ -865,19 +1121,22 @@ export function PayrollReports() {
                               <td className="py-3 px-4 text-right text-red-400">
                                 {editingEntry === entry.id ? (
                                   <div className="space-y-1">
+                                    <label className="text-xs text-slate-400">Late Deduction:</label>
                                     <input
                                       type="number"
                                       step="0.01"
                                       value={editData.undertime_deduction || ''}
                                       onChange={(e) => setEditData({ ...editData, undertime_deduction: parseFloat(e.target.value) || 0 })}
-                                      className="w-20 text-xs px-1 py-1 bg-slate-700/50 border border-slate-600 rounded text-right text-white"
+                                      className="w-24 text-xs px-2 py-1 bg-slate-700/50 border border-slate-600 rounded text-right text-white focus:ring-2 focus:ring-emerald-500"
+                                      readOnly={isCalculating}
                                     />
+                                    <label className="text-xs text-slate-400">Staff House:</label>
                                     <input
                                       type="number"
                                       step="0.01"
                                       value={editData.staff_house_deduction || ''}
                                       onChange={(e) => setEditData({ ...editData, staff_house_deduction: parseFloat(e.target.value) || 0 })}
-                                      className="w-20 text-xs px-1 py-1 bg-slate-700/50 border border-slate-600 rounded text-right text-white"
+                                      className="w-24 text-xs px-2 py-1 bg-slate-700/50 border border-slate-600 rounded text-right text-white focus:ring-2 focus:ring-emerald-500"
                                     />
                                   </div>
                                 ) : (
@@ -887,23 +1146,33 @@ export function PayrollReports() {
                                 )}
                               </td>
                               <td className="py-3 px-4 text-right">
-                                <p className="font-bold text-white">
+                                <div className="font-bold text-white">
                                   {editingEntry === entry.id 
-                                    ? formatCurrency(
-                                        (editData.base_salary || 0) + 
-                                        (editData.overtime_pay || 0) - 
-                                        (editData.undertime_deduction || 0) - 
-                                        (editData.staff_house_deduction || 0)
+                                    ? (
+                                        <div className="space-y-1">
+                                          <div className={`text-lg ${isCalculating ? 'text-emerald-400' : 'text-white'}`}>
+                                            {formatCurrency(
+                                              (editData.base_salary || 0) + 
+                                              (editData.overtime_pay || 0) - 
+                                              (editData.undertime_deduction || 0) - 
+                                              (editData.staff_house_deduction || 0)
+                                            )}
+                                          </div>
+                                          {isCalculating && (
+                                            <div className="text-xs text-emerald-400">Auto-calculated</div>
+                                          )}
+                                        </div>
                                       )
                                     : formatCurrency(parseFloat(entry.total_salary) || 0)
                                   }
-                                </p>
+                                </div>
                               </td>
                               <td className="py-3 px-4 text-center">
                                 {editingEntry === entry.id ? (
                                   <div className="flex items-center justify-center gap-1">
                                     <button
                                       onClick={() => handleSave(entry.id)}
+                                      disabled={isCalculating}
                                       className="text-emerald-400 hover:text-emerald-300 p-1 rounded transition-colors"
                                       title="Save"
                                     >
