@@ -35,9 +35,19 @@ const DEPARTMENTS = [
   'IT Department'
 ];
 
+const DAYS_OF_WEEK = [
+  { value: 'monday', label: 'Monday' },
+  { value: 'tuesday', label: 'Tuesday' },
+  { value: 'wednesday', label: 'Wednesday' },
+  { value: 'thursday', label: 'Thursday' },
+  { value: 'friday', label: 'Friday' },
+  { value: 'saturday', label: 'Saturday' },
+  { value: 'sunday', label: 'Sunday' }
+];
+
 export function PayrollReports() {
   const [payrollData, setPayrollData] = useState<PayrollEntry[]>([]);
-  const [selectedDates, setSelectedDates] = useState<string[]>([]);
+  const [selectedDays, setSelectedDays] = useState<string[]>(['monday', 'tuesday', 'wednesday', 'thursday', 'friday']);
   const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -45,22 +55,22 @@ export function PayrollReports() {
   const [editData, setEditData] = useState<any>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('');
+  const [currentWeekStart, setCurrentWeekStart] = useState('');
   const { token } = useAuth();
 
   useEffect(() => {
     fetchUsers();
-    // Set default to current week
+    // Set current week
     const today = new Date();
-    const currentWeekStart = getWeekStart(today);
-    const currentWeekEnd = getWeekEnd(currentWeekStart);
-    setSelectedDates([currentWeekStart, currentWeekEnd]);
+    const weekStart = getWeekStart(today);
+    setCurrentWeekStart(weekStart);
   }, []);
 
   useEffect(() => {
-    if (selectedDates.length === 2) {
+    if (currentWeekStart && selectedDays.length > 0) {
       fetchPayrollReport();
     }
-  }, [selectedDates]);
+  }, [currentWeekStart, selectedDays]);
 
   const getWeekStart = (date: Date) => {
     const d = new Date(date);
@@ -69,11 +79,16 @@ export function PayrollReports() {
     return new Date(d.setDate(diff)).toISOString().split('T')[0];
   };
 
-  const getWeekEnd = (weekStart: string) => {
+  const getDateFromWeekDay = (weekStart: string, dayName: string) => {
+    const dayIndex = DAYS_OF_WEEK.findIndex(d => d.value === dayName);
     const start = new Date(weekStart);
-    const end = new Date(start);
-    end.setDate(start.getDate() + 6);
-    return end.toISOString().split('T')[0];
+    const targetDate = new Date(start);
+    targetDate.setDate(start.getDate() + dayIndex);
+    return targetDate.toISOString().split('T')[0];
+  };
+
+  const getSelectedDates = () => {
+    return selectedDays.map(day => getDateFromWeekDay(currentWeekStart, day)).sort();
   };
 
   const fetchUsers = async () => {
@@ -89,12 +104,14 @@ export function PayrollReports() {
   };
 
   const fetchPayrollReport = async () => {
-    if (selectedDates.length !== 2) return;
+    if (!currentWeekStart || selectedDays.length === 0) return;
     
     setLoading(true);
     try {
-      const [startDate, endDate] = selectedDates;
-      let url = `http://192.168.100.60:3001/api/payroll-report?startDate=${startDate}&endDate=${endDate}`;
+      const selectedDates = getSelectedDates();
+      const selectedDatesParam = selectedDates.join(',');
+      
+      let url = `http://192.168.100.60:3001/api/payroll-report?selectedDates=${selectedDatesParam}`;
       
       const response = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
@@ -109,14 +126,15 @@ export function PayrollReports() {
   };
 
   const generatePayslips = async () => {
-    if (selectedDates.length !== 2) {
-      alert('Please select a date range');
+    if (selectedDays.length === 0) {
+      alert('Please select at least one day');
       return;
     }
 
     setLoading(true);
     try {
-      const [startDate, endDate] = selectedDates;
+      const selectedDates = getSelectedDates();
+      
       const response = await fetch('http://192.168.100.60:3001/api/payslips/generate', {
         method: 'POST',
         headers: {
@@ -124,8 +142,7 @@ export function PayrollReports() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          startDate,
-          endDate,
+          selectedDates,
           userIds: selectedUsers.length > 0 ? selectedUsers : undefined
         }),
       });
@@ -161,8 +178,8 @@ export function PayrollReports() {
   };
 
   const releasePayslips = async () => {
-    if (selectedDates.length !== 2) {
-      alert('Please select a date range');
+    if (selectedDays.length === 0) {
+      alert('Please select at least one day');
       return;
     }
 
@@ -171,6 +188,8 @@ export function PayrollReports() {
 
     setLoading(true);
     try {
+      const selectedDates = getSelectedDates();
+      
       const response = await fetch('http://192.168.100.60:3001/api/payslips/release', {
         method: 'POST',
         headers: {
@@ -256,6 +275,22 @@ export function PayrollReports() {
     }
   };
 
+  const handleDayToggle = (dayValue: string) => {
+    setSelectedDays(prev => 
+      prev.includes(dayValue) 
+        ? prev.filter(d => d !== dayValue)
+        : [...prev, dayValue]
+    );
+  };
+
+  const handleUserToggle = (userId: number) => {
+    setSelectedUsers(prev => 
+      prev.includes(userId) 
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId]
+    );
+  };
+
   const exportToCSV = () => {
     if (payrollData.length === 0) {
       alert('No data to export');
@@ -306,8 +341,9 @@ export function PayrollReports() {
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
     
-    const dateRange = selectedDates.length === 2 
-      ? `${selectedDates[0]}_to_${selectedDates[1]}`
+    const selectedDates = getSelectedDates();
+    const dateRange = selectedDates.length > 0 
+      ? `${selectedDates[0]}_to_${selectedDates[selectedDates.length - 1]}`
       : new Date().toISOString().split('T')[0];
     
     link.download = `payroll_report_${dateRange}.csv`;
@@ -327,16 +363,23 @@ export function PayrollReports() {
     doc.setFont('helvetica', 'bold');
     doc.text('Payroll Report', 20, 20);
     
-    // Add date range
+    // Add selected days info
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
-    const dateRange = selectedDates.length === 2 
-      ? `${formatDate(selectedDates[0])} - ${formatDate(selectedDates[1])}`
-      : 'All Records';
-    doc.text(`Period: ${dateRange}`, 20, 30);
+    const selectedDayNames = selectedDays.map(day => 
+      DAYS_OF_WEEK.find(d => d.value === day)?.label
+    ).join(', ');
+    doc.text(`Selected Days: ${selectedDayNames}`, 20, 30);
+    
+    // Add week info
+    const selectedDates = getSelectedDates();
+    const weekInfo = selectedDates.length > 0 
+      ? `Week of ${formatDate(currentWeekStart)} (${formatDate(selectedDates[0])} - ${formatDate(selectedDates[selectedDates.length - 1])})`
+      : 'Current Week';
+    doc.text(`Period: ${weekInfo}`, 20, 37);
     
     // Add generation date
-    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 20, 37);
+    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 20, 44);
     
     // Prepare table data
     const tableHeaders = [
@@ -369,7 +412,7 @@ export function PayrollReports() {
     (doc as any).autoTable({
       head: [tableHeaders],
       body: tableData,
-      startY: 45,
+      startY: 52,
       styles: {
         fontSize: 8,
         cellPadding: 2,
@@ -424,8 +467,9 @@ export function PayrollReports() {
     }
     
     // Save the PDF
-    const dateRangeFilename = selectedDates.length === 2 
-      ? `${selectedDates[0]}_to_${selectedDates[1]}`
+    const selectedDates = getSelectedDates();
+    const dateRangeFilename = selectedDates.length > 0 
+      ? `${selectedDates[0]}_to_${selectedDates[selectedDates.length - 1]}`
       : new Date().toISOString().split('T')[0];
     
     doc.save(`payroll_report_${dateRangeFilename}.pdf`);
@@ -473,48 +517,78 @@ export function PayrollReports() {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-2xl font-bold text-white">Payroll Reports</h2>
-          <p className="text-slate-400">Generate and manage employee payroll reports</p>
+          <p className="text-slate-400">Generate and manage employee payroll reports by selecting specific days</p>
         </div>
       </div>
 
       {/* Controls */}
       <div className="bg-slate-800/90 backdrop-blur-sm rounded-xl p-6 mb-6 shadow-lg border border-slate-700/50">
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              Start Date
-            </label>
-            <input
-              type="date"
-              value={selectedDates[0] || ''}
-              onChange={(e) => {
-                const newDates = [...selectedDates];
-                newDates[0] = e.target.value;
-                if (newDates[1] && new Date(e.target.value) > new Date(newDates[1])) {
-                  newDates[1] = getWeekEnd(e.target.value);
-                }
-                setSelectedDates(newDates);
-              }}
-              className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-white"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              End Date
-            </label>
-            <input
-              type="date"
-              value={selectedDates[1] || ''}
-              onChange={(e) => {
-                const newDates = [...selectedDates];
-                newDates[1] = e.target.value;
-                setSelectedDates(newDates);
-              }}
-              className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-white"
-            />
-          </div>
+        {/* Week Selection */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-slate-300 mb-2">
+            Select Week
+          </label>
+          <input
+            type="date"
+            value={currentWeekStart}
+            onChange={(e) => setCurrentWeekStart(e.target.value)}
+            className="px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-white"
+          />
+          <p className="text-xs text-slate-400 mt-1">
+            Week of {formatDate(currentWeekStart)} - {formatDate(new Date(new Date(currentWeekStart).getTime() + 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])}
+          </p>
+        </div>
 
+        {/* Day Selection */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-slate-300 mb-3">
+            Select Days of the Week
+          </label>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
+            {DAYS_OF_WEEK.map((day) => (
+              <label key={day.value} className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={selectedDays.includes(day.value)}
+                  onChange={() => handleDayToggle(day.value)}
+                  className="rounded border-slate-600 text-emerald-600 focus:ring-emerald-500 bg-slate-700/50 mr-2"
+                />
+                <span className="text-sm text-slate-300">{day.label}</span>
+              </label>
+            ))}
+          </div>
+          <p className="text-xs text-slate-400 mt-2">
+            Selected: {selectedDays.map(day => DAYS_OF_WEEK.find(d => d.value === day)?.label).join(', ')}
+          </p>
+        </div>
+
+        {/* User Selection */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-slate-300 mb-3">
+            Select Specific Users (Optional)
+          </label>
+          <div className="max-h-40 overflow-y-auto bg-slate-700/30 rounded-lg p-3 border border-slate-600/50">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+              {users.map((user) => (
+                <label key={user.id} className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={selectedUsers.includes(user.id)}
+                    onChange={() => handleUserToggle(user.id)}
+                    className="rounded border-slate-600 text-emerald-600 focus:ring-emerald-500 bg-slate-700/50 mr-2"
+                  />
+                  <span className="text-sm text-slate-300 truncate">{user.username}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+          <p className="text-xs text-slate-400 mt-2">
+            {selectedUsers.length === 0 ? 'All active users will be included' : `${selectedUsers.length} users selected`}
+          </p>
+        </div>
+
+        {/* Search and Filter */}
+        <div className="grid md:grid-cols-2 gap-4 mb-4">
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">
               Search Employees
@@ -554,7 +628,7 @@ export function PayrollReports() {
         <div className="flex flex-wrap gap-3">
           <button
             onClick={generatePayslips}
-            disabled={loading || selectedDates.length !== 2}
+            disabled={loading || selectedDays.length === 0}
             className="bg-gradient-to-r from-emerald-500 to-green-600 text-white px-4 py-2 rounded-lg font-medium hover:from-emerald-600 hover:to-green-700 disabled:opacity-50 btn-enhanced flex items-center gap-2 shadow-lg"
           >
             <PhilippinePeso className="w-4 h-4" />
@@ -634,10 +708,10 @@ export function PayrollReports() {
         <div className="bg-slate-800/90 backdrop-blur-sm rounded-xl shadow-lg overflow-hidden border border-slate-700/50">
           <div className="bg-slate-700/50 px-6 py-4 border-b border-slate-600/50">
             <h3 className="text-lg font-semibold text-white">
-              Payroll Report - {selectedDates.length === 2 ? `${formatDate(selectedDates[0])} to ${formatDate(selectedDates[1])}` : 'All Records'}
+              Payroll Report - {selectedDays.map(day => DAYS_OF_WEEK.find(d => d.value === day)?.label).join(', ')}
             </h3>
             <p className="text-sm text-slate-400 mt-1">
-              Showing {filteredPayrollData.length} of {payrollData.length} entries
+              Week of {formatDate(currentWeekStart)} • Showing {filteredPayrollData.length} of {payrollData.length} entries
             </p>
           </div>
           <div className="overflow-x-auto">
@@ -836,9 +910,9 @@ export function PayrollReports() {
           <Calendar className="w-16 h-16 text-slate-600 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-white mb-2">No Payroll Data</h3>
           <p className="text-slate-400">
-            {selectedDates.length === 2 
-              ? 'No payroll records found for the selected date range. Generate payslips first.'
-              : 'Please select a date range to view payroll data.'}
+            {selectedDays.length === 0 
+              ? 'Please select at least one day to view payroll data.'
+              : 'No payroll records found for the selected days. Generate payslips first.'}
           </p>
         </div>
       )}
