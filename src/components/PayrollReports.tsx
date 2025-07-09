@@ -467,8 +467,9 @@ export function PayrollReports() {
     }
     
     // Save the PDF
-    const dateRangeFilename = selectedDatesForPdf.length > 0 
-      ? `${selectedDatesForPdf[0]}_to_${selectedDatesForPdf[selectedDatesForPdf.length - 1]}`
+    const selectedDatesForFilename = getSelectedDates();
+    const dateRangeFilename = selectedDatesForFilename.length > 0 
+      ? `${selectedDatesForFilename[0]}_to_${selectedDatesForFilename[selectedDatesForFilename.length - 1]}`
       : new Date().toISOString().split('T')[0];
     
     doc.save(`payroll_report_${dateRangeFilename}.pdf`);
