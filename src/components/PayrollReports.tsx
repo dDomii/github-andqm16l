@@ -480,9 +480,6 @@ export function PayrollReports() {
   };
 
   const formatDate = (dateString: string) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'Invalid Date';
     return new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
@@ -491,9 +488,7 @@ export function PayrollReports() {
   };
 
   const formatTime = (timeString: string) => {
-    if (!timeString || timeString === 'null' || timeString === 'undefined') return 'N/A';
-    const date = new Date(timeString);
-    if (isNaN(date.getTime())) return 'N/A';
+    if (!timeString) return 'N/A';
     return new Date(timeString).toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
