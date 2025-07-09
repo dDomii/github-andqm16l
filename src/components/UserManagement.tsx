@@ -132,7 +132,7 @@ export function UserManagement() {
 
   const handleSearchSelect = (user: User) => {
     setSearchTerm(user.username);
-    setSelectedDepartmentFilter(user.department);
+    setSelectedDepartmentFilter(''); // Don't auto-filter by department
     setShowSearchDropdown(false);
     
     // Expand the user's department and scroll to it
@@ -144,7 +144,15 @@ export function UserManagement() {
     setTimeout(() => {
       const element = document.getElementById(`dept-${user.department.replace(/\s+/g, '-')}`);
       if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Highlight the user temporarily
+        const userElement = document.getElementById(`user-${user.id}`);
+        if (userElement) {
+          userElement.classList.add('ring-2', 'ring-emerald-500', 'ring-opacity-75');
+          setTimeout(() => {
+            userElement.classList.remove('ring-2', 'ring-emerald-500', 'ring-opacity-75');
+          }, 2000);
+        }
       }
     }, 100);
   };
@@ -549,6 +557,7 @@ export function UserManagement() {
                     deptUsers.map((user) => (
                       <div 
                         key={user.id} 
+                        id={`user-${user.id}`}
                         className={`p-4 hover:bg-slate-700/20 transition-all duration-200 border-l-2 border-transparent hover:border-l-emerald-500/50 last:border-b-0`}
                         style={{ 
                           borderBottomColor: colors.border ? colors.border.split(' ')[1]?.replace('border-', '')?.replace('/30', '/20') || 'rgba(71, 85, 105, 0.2)' : 'rgba(71, 85, 105, 0.2)'

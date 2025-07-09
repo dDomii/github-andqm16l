@@ -314,11 +314,11 @@ export function TimeTracking() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as TabType)}
-                  className={`${
+                  className={`btn-enhanced ${
                     activeTab === tab.id
                       ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-lg transform scale-105'
                       : 'text-slate-300 hover:text-white hover:bg-slate-600/50'
-                  } whitespace-nowrap py-3 px-6 rounded-lg font-medium text-sm flex items-center gap-2 transition-all duration-300`}
+                  } whitespace-nowrap py-3 px-6 rounded-lg font-medium text-sm flex items-center gap-2`}
                 >
                   <Icon className="w-4 h-4" />
                   {tab.label}
@@ -453,7 +453,7 @@ export function TimeTracking() {
                       <button
                         onClick={handleClockIn}
                         disabled={isLoading}
-                        className="w-full bg-gradient-to-r from-emerald-500 to-green-600 text-white py-4 px-6 rounded-xl font-medium hover:from-emerald-600 hover:to-green-700 focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-slate-800 disabled:opacity-50 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg"
+                        className="w-full bg-gradient-to-r from-emerald-500 to-green-600 text-white py-4 px-6 rounded-xl font-medium hover:from-emerald-600 hover:to-green-700 focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-slate-800 disabled:opacity-50 btn-enhanced flex items-center justify-center gap-2 shadow-lg"
                       >
                         <Play className="w-5 h-5" />
                         {isLoading ? 'Clocking In...' : 'Clock In'}
@@ -464,7 +464,7 @@ export function TimeTracking() {
                       <button
                         onClick={handleClockOut}
                         disabled={isLoading}
-                        className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white py-4 px-6 rounded-xl font-medium hover:from-red-600 hover:to-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-slate-800 disabled:opacity-50 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg"
+                        className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white py-4 px-6 rounded-xl font-medium hover:from-red-600 hover:to-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-slate-800 disabled:opacity-50 btn-enhanced flex items-center justify-center gap-2 shadow-lg"
                       >
                         <Square className="w-5 h-5" />
                         {isLoading ? 'Clocking Out...' : 'Clock Out'}
@@ -478,7 +478,7 @@ export function TimeTracking() {
                           <p className="text-slate-300">You have completed your shift for today.</p>
                           <button
                             onClick={handleClockIn}
-                            className="mt-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2 px-4 rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 transition-all duration-200 text-sm"
+                           className="mt-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2 px-4 rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 btn-enhanced text-sm"
                           >
                             Start New Session
                           </button>
@@ -488,7 +488,7 @@ export function TimeTracking() {
                       {/* Manual Overtime Request Button - Always visible */}
                       <button
                         onClick={() => setShowOvertimeModal(true)}
-                        className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 px-6 rounded-xl font-medium hover:from-orange-600 hover:to-orange-700 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-slate-800 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg"
+                        className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 px-6 rounded-xl font-medium hover:from-orange-600 hover:to-orange-700 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-slate-800 btn-enhanced flex items-center justify-center gap-2 shadow-lg"
                       >
                         <Clock className="w-5 h-5" />
                         Request Overtime
@@ -640,7 +640,7 @@ export function TimeTracking() {
               <button
                 onClick={submitOvertimeRequest}
                 disabled={!overtimeNote.trim() || isLoading}
-                className="flex-1 bg-gradient-to-r from-emerald-500 to-green-600 text-white py-2 px-4 rounded-lg font-medium hover:from-emerald-600 hover:to-green-700 disabled:opacity-50 transition-all duration-200"
+               className="flex-1 bg-gradient-to-r from-emerald-500 to-green-600 text-white py-2 px-4 rounded-lg font-medium hover:from-emerald-600 hover:to-green-700 disabled:opacity-50 btn-enhanced"
               >
                 {isLoading ? 'Processing...' : 'Submit Request'}
               </button>

@@ -67,8 +67,8 @@ export function AdminDashboard() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-slate-800/90 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-slate-700/50">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 stagger-container">
+        <div className="bg-slate-800/90 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-slate-700/50 card-hover stagger-item">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-400">Total Users</p>
@@ -80,7 +80,7 @@ export function AdminDashboard() {
           </div>
         </div>
 
-        <div className="bg-slate-800/90 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-slate-700/50">
+        <div className="bg-slate-800/90 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-slate-700/50 card-hover stagger-item">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-400">Active Users</p>
@@ -92,7 +92,7 @@ export function AdminDashboard() {
           </div>
         </div>
 
-        <div className="bg-slate-800/90 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-slate-700/50">
+        <div className="bg-slate-800/90 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-slate-700/50 card-hover stagger-item">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-400">Pending Overtime</p>
@@ -104,7 +104,7 @@ export function AdminDashboard() {
           </div>
         </div>
 
-        <div className="bg-slate-800/90 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-slate-700/50">
+        <div className="bg-slate-800/90 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-slate-700/50 card-hover stagger-item">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-400">This Week</p>
@@ -128,11 +128,11 @@ export function AdminDashboard() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as TabType)}
-                  className={`${
+                  className={`btn-enhanced ${
                     activeTab === tab.id
                       ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-lg transform scale-105'
                       : 'text-slate-300 hover:text-white hover:bg-slate-600/50'
-                  } whitespace-nowrap py-3 px-6 rounded-lg font-medium text-sm flex items-center gap-2 transition-all duration-300`}
+                  } whitespace-nowrap py-3 px-6 rounded-lg font-medium text-sm flex items-center gap-2`}
                 >
                   <Icon className="w-4 h-4" />
                   {tab.label}
