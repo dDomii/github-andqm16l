@@ -49,7 +49,6 @@ export function PayrollReports() {
   const [error, setError] = useState('');
   const [editingEntry, setEditingEntry] = useState<number | null>(null);
   const [editData, setEditData] = useState<Partial<PayrollEntry>>({});
-  const [activeTab, setActiveTab] = useState<'generate' | 'preview'>('generate');
   const [activeTab, setActiveTab] = useState<'generate' | 'preview' | 'logs'>('generate');
   const [payslipLogs, setPayslipLogs] = useState<any[]>([]);
   const [generationMode, setGenerationMode] = useState<'range' | 'specific'>('range');
