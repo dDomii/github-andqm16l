@@ -384,6 +384,90 @@ app.put('/api/payroll/:id', authenticate, async (req, res) => {
   res.json(result);
 });
 
+app.post('/api/payslips/release', authenticate, async (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Admin access required' });
+  }
+
+  const { selectedDates, userIds } = req.body;
+  
+  try {
+    let whereClause = '';
+    let params = [];
+    
+    if (selectedDates && selectedDates.length > 0) {
+      whereClause = 'WHERE week_start = ? AND week_end = ?';
+      params = [selectedDates[0], selectedDates[selectedDates.length - 1]];
+    }
+    
+    if (userIds && userIds.length > 0) {
+      whereClause += whereClause ? ' AND ' : 'WHERE ';
+      whereClause += `user_id IN (${userIds.map(() => '?').join(',')})`;
+      params.push(...userIds);
+    }
+    
+    // Update payslips to released status
+    const [result] = await pool.execute(
+      `UPDATE payslips SET status = 'released' ${whereClause} AND status = 'pending'`,
+      params
+    );
+    
+    res.json({ 
+      success: true, 
+      releasedCount: result.affectedRows,
+      message: `Successfully released ${result.affectedRows} payslips`
+    });
+  } catch (error) {
+    console.error('Error releasing payslips:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.post('/api/payslip-logs', authenticate, async (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Admin access required' });
+  }
+
+  const { action, selectedDates, payslipCount, userIds } = req.body;
+  
+  try {
+    const periodStart = selectedDates[0];
+    const periodEnd = selectedDates[selectedDates.length - 1];
+    const userIdsJson = userIds ? JSON.stringify(userIds) : null;
+    
+    await pool.execute(
+      'INSERT INTO payslip_logs (admin_id, action, period_start, period_end, payslip_count, user_ids) VALUES (?, ?, ?, ?, ?, ?)',
+      [req.user.userId, action, periodStart, periodEnd, payslipCount, userIdsJson]
+    );
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error logging payslip action:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.get('/api/payslip-logs', authenticate, async (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Admin access required' });
+  }
+
+  try {
+    const [logs] = await pool.execute(`
+      SELECT pl.*, u.username as admin_username 
+      FROM payslip_logs pl 
+      JOIN users u ON pl.admin_id = u.id 
+      ORDER BY pl.created_at DESC 
+      LIMIT 50
+    `);
+    
+    res.json(logs);
+  } catch (error) {
+    console.error('Error fetching payslip logs:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 app.get('/api/active-users', authenticate, async (req, res) => {
   if (req.user.role !== 'admin') {
     return res.status(403).json({ message: 'Admin access required' });

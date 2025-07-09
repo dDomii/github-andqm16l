@@ -372,11 +372,11 @@ export function PayrollHistory() {
                     </td>
                     <td className="py-3 px-4 text-center">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        entry.status === 'released' 
+                        (entry as any).status === 'released' 
                           ? 'bg-emerald-900/20 text-emerald-400 border border-emerald-800/50' 
                           : 'bg-yellow-900/20 text-yellow-400 border border-yellow-800/50'
                       }`}>
-                        {entry.status === 'released' ? 'Released' : 'Pending'}
+                        {(entry as any).status === 'released' ? 'Released' : 'Pending'}
                       </span>
                     </td>
                   </tr>

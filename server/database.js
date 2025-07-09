@@ -82,6 +82,21 @@ export async function initializeDatabase() {
       )
     `);
 
+    // Payslip logs table
+    await pool.execute(`
+      CREATE TABLE IF NOT EXISTS payslip_logs (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        admin_id INT NOT NULL,
+        action ENUM('generated', 'released') NOT NULL,
+        period_start DATE NOT NULL,
+        period_end DATE NOT NULL,
+        payslip_count INT NOT NULL,
+        user_ids TEXT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (admin_id) REFERENCES users(id)
+      )
+    `);
+
     // Add clock_in_time and clock_out_time columns if they don't exist
     try {
       await pool.execute(`
