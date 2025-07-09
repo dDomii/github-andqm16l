@@ -58,10 +58,8 @@ export function AdminDashboard() {
 
   const tabs = [
     { id: 'users', label: 'User Management', icon: Users },
-    { id: 'overtime', label: 'Overtime Approval', icon: Clock },
     { id: 'payroll', label: 'Payroll', icon: PhilippinePeso },
-    { id: 'live-reports', label: 'Live Reports', icon: Activity },
-    { id: 'time-logs', label: 'Time Logs', icon: FileText }
+    { id: 'live-reports', label: 'Live Reports', icon: Activity }
   ];
 
   return (
@@ -150,10 +148,8 @@ export function AdminDashboard() {
 
         <div className="p-6">
           {activeTab === 'users' && <UserManagement />}
-          {activeTab === 'overtime' && <OvertimeApproval />}
           {activeTab === 'payroll' && <PayrollReports />}
           {activeTab === 'live-reports' && <LiveReports />}
-          {activeTab === 'time-logs' && <TimeLogs />}
         </div>
       </div>
     </div>
