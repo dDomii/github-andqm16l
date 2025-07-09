@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Plus, Edit2, User, Shield, Clock, Trash2, ChevronDown, ChevronUp, Download, Search, Filter } from 'lucide-react';
+import { Plus, Edit2, User, Shield, Clock, Trash2, ChevronDown, ChevronUp, Download, Search, Filter, X } from 'lucide-react';
 
 interface User {
   id: number;
@@ -94,6 +94,8 @@ export function UserManagement() {
   const [expandedDepartments, setExpandedDepartments] = useState<Set<string>>(new Set(DEPARTMENTS));
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDepartmentFilter, setSelectedDepartmentFilter] = useState('');
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const [searchSuggestions, setSearchSuggestions] = useState<User[]>([]);
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -114,6 +116,38 @@ export function UserManagement() {
     fetchUsers();
   }, []);
 
+  useEffect(() => {
+    if (searchTerm.length > 0) {
+      const suggestions = users.filter(user => 
+        user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.department.toLowerCase().includes(searchTerm.toLowerCase())
+      ).slice(0, 5); // Limit to 5 suggestions
+      setSearchSuggestions(suggestions);
+      setShowSearchDropdown(true);
+    } else {
+      setSearchSuggestions([]);
+      setShowSearchDropdown(false);
+    }
+  }, [searchTerm, users]);
+
+  const handleSearchSelect = (user: User) => {
+    setSearchTerm(user.username);
+    setSelectedDepartmentFilter(user.department);
+    setShowSearchDropdown(false);
+    
+    // Expand the user's department and scroll to it
+    const newExpanded = new Set(expandedDepartments);
+    newExpanded.add(user.department);
+    setExpandedDepartments(newExpanded);
+    
+    // Scroll to the department after a short delay
+    setTimeout(() => {
+      const element = document.getElementById(`dept-${user.department.replace(/\s+/g, '-')}`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
+  };
   const fetchUsers = async () => {
     try {
       const response = await fetch('http://192.168.100.60:3001/api/users', {
@@ -363,10 +397,69 @@ export function UserManagement() {
             <input
               type="text"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+              }}
+              onFocus={() => {
+                if (searchTerm.length > 0) setShowSearchDropdown(true);
+              }}
+              onBlur={() => {
+                // Delay hiding to allow click on suggestions
+                setTimeout(() => setShowSearchDropdown(false), 200);
+              }}
               className="w-full pl-10 pr-4 py-2 bg-slate-700/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-white placeholder-slate-400"
               placeholder="Search by username or department..."
             />
+            {searchTerm && (
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  setSelectedDepartmentFilter('');
+                  setShowSearchDropdown(false);
+                }}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+            
+            {/* Search Dropdown */}
+            {showSearchDropdown && searchSuggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800/95 backdrop-blur-sm border border-slate-600 rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto">
+                {searchSuggestions.map((user) => {
+                  const colors = DEPARTMENT_COLORS[user.department];
+                  return (
+                    <button
+                      key={user.id}
+                      onClick={() => handleSearchSelect(user)}
+                      className="w-full px-4 py-3 text-left hover:bg-slate-700/50 transition-colors border-b border-slate-700/30 last:border-b-0"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`bg-gradient-to-br ${colors.accent} p-1.5 rounded-lg border ${colors.border}`}>
+                          {user.role === 'admin' ? (
+                            <Shield className={`w-3 h-3 ${colors.icon}`} />
+                          ) : (
+                            <User className={`w-3 h-3 ${colors.icon}`} />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium text-white text-sm">{user.username}</p>
+                          <p className={`text-xs ${colors.text}`}>{user.department}</p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {user.role === 'admin' && (
+                            <span className="bg-emerald-900/30 text-emerald-400 px-1.5 py-0.5 rounded text-xs">Admin</span>
+                          )}
+                          {user.staff_house && (
+                            <span className="bg-purple-900/30 text-purple-400 px-1.5 py-0.5 rounded text-xs">SH</span>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
             </div>
           </div>
           
@@ -418,7 +511,11 @@ export function UserManagement() {
           const activeCount = deptUsers.filter(user => user.active).length;
 
           return (
-            <div key={department} className={`${colors.bg} backdrop-blur-sm rounded-xl shadow-lg overflow-hidden border ${colors.border} h-fit`}>
+            <div 
+              key={department} 
+              id={`dept-${department.replace(/\s+/g, '-')}`}
+              className={`${colors.bg} backdrop-blur-sm rounded-xl shadow-lg overflow-hidden border ${colors.border} h-fit`}
+            >
               <button
                 onClick={() => toggleDepartment(department)}
                 className={`w-full px-3 py-2.5 bg-gradient-to-r ${colors.accent} border-b ${colors.border} flex items-center justify-between hover:opacity-80 transition-all duration-200`}
@@ -447,10 +544,14 @@ export function UserManagement() {
               </button>
 
               {isExpanded && (
-                <div className="divide-y divide-slate-700/30 max-h-80 overflow-y-auto">
+                <div className={`divide-y max-h-96 overflow-y-auto`} style={{ borderColor: DEPARTMENT_COLORS[department].border.split(' ')[1] }}>
                   {deptUsers.length > 0 ? (
                     deptUsers.map((user) => (
-                      <div key={user.id} className="p-4 hover:bg-slate-700/20 transition-all duration-200 border-l-2 border-transparent hover:border-emerald-500/50 border-b border-slate-700/20 last:border-b-0">
+                      <div 
+                        key={user.id} 
+                        className={`p-4 hover:bg-slate-700/20 transition-all duration-200 border-l-2 border-transparent hover:${colors.border.replace('border-', 'border-l-')} last:border-b-0`}
+                        style={{ borderBottomColor: DEPARTMENT_COLORS[department].border.split(' ')[1].replace('border-', '').replace('/30', '/20') }}
+                      >
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex items-start gap-3 flex-1 min-w-0">
                             <div className={`bg-gradient-to-br ${colors.accent} p-1.5 rounded-lg border ${colors.border} flex-shrink-0`}>

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { OvertimeApproval } from './OvertimeApproval';
+import { TimeLogs } from './TimeLogs';
 import { Download, Calendar, PhilippinePeso, FileText, AlertCircle, Edit2, Save, X, Eye, Users, CheckSquare, Square, RefreshCw } from 'lucide-react';
 
 interface PayrollEntry {
@@ -477,7 +479,6 @@ export function PayrollReports() {
           <button
             onClick={() => {
               setActiveTab('logs');
-              fetchPayslipLogs();
             }}
             className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
               activeTab === 'logs'

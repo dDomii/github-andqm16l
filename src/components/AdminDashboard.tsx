@@ -1,18 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { UserManagement } from './UserManagement';
-import { OvertimeApproval } from './OvertimeApproval';
 import { PayrollReports } from './PayrollReports';
 import { LiveReports } from './LiveReports';
-import { TimeLogs } from './TimeLogs';
 import { 
   Users, 
-  Clock, 
   PhilippinePeso, 
-  Settings,
   Activity,
-  Calendar,
-  FileText
+  Settings
 } from 'lucide-react';
 
 type TabType = 'users' | 'overtime' | 'payroll' | 'live-reports' | 'time-logs';
