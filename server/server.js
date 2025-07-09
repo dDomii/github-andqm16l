@@ -52,6 +52,25 @@ app.post('/api/clock-in', authenticate, async (req, res) => {
   res.json(result);
 });
 
+app.post('/api/reset-clock-in', authenticate, async (req, res) => {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Delete existing entry for today
+    await pool.execute(
+      'DELETE FROM time_entries WHERE user_id = ? AND DATE(clock_in) = ?',
+      [req.user.userId, today]
+    );
+    
+    // Create new clock in entry
+    const result = await clockIn(req.user.userId);
+    res.json(result);
+  } catch (error) {
+    console.error('Reset clock in error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 app.post('/api/clock-out', authenticate, async (req, res) => {
   const { overtimeNote } = req.body;
   const result = await clockOut(req.user.userId, overtimeNote);

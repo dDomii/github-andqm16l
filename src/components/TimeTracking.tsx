@@ -44,6 +44,7 @@ export function TimeTracking() {
   const handleClockIn = async () => {
     setIsLoading(true);
     try {
+      // Always allow clock in - will create new entry for today
       const response = await fetch('http://192.168.100.60:3001/api/clock-in', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
@@ -53,13 +54,40 @@ export function TimeTracking() {
       if (data.success) {
         await fetchTodayEntry();
       } else {
-        alert(data.message || 'Failed to clock in');
+        // If already clocked in, show option to reset
+        if (data.message && data.message.includes('Already clocked in')) {
+          const shouldReset = window.confirm('You already clocked in today. Do you want to start a new clock-in session? This will replace your current entry.');
+          if (shouldReset) {
+            await resetAndClockIn();
+          }
+        } else {
+          alert(data.message || 'Failed to clock in');
+        }
       }
     } catch (error) {
       console.error('Clock in error:', error);
       alert('Failed to clock in');
     }
     setIsLoading(false);
+  };
+
+  const resetAndClockIn = async () => {
+    try {
+      const response = await fetch('http://192.168.100.60:3001/api/reset-clock-in', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        await fetchTodayEntry();
+      } else {
+        alert(data.message || 'Failed to reset clock in');
+      }
+    } catch (error) {
+      console.error('Reset clock in error:', error);
+      alert('Failed to reset clock in');
+    }
   };
 
   const handleClockOut = async () => {

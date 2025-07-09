@@ -50,6 +50,8 @@ export function PayrollReports() {
   const [editingEntry, setEditingEntry] = useState<number | null>(null);
   const [editData, setEditData] = useState<Partial<PayrollEntry>>({});
   const [activeTab, setActiveTab] = useState<'generate' | 'preview'>('generate');
+  const [showLogsTab, setShowLogsTab] = useState(false);
+  const [payslipLogs, setPayslipLogs] = useState<any[]>([]);
   const [generationMode, setGenerationMode] = useState<'range' | 'specific'>('range');
   const { token } = useAuth();
 
@@ -121,6 +123,8 @@ export function PayrollReports() {
         } else {
           // Show success message
           console.log('Payslips generated:', data);
+          // Log the generation
+          await logPayslipGeneration(data);
           await fetchPayrollReport();
           setActiveTab('preview');
         }
@@ -132,6 +136,93 @@ export function PayrollReports() {
       setError('Failed to generate payslips');
     }
     setLoading(false);
+  };
+
+  const logPayslipGeneration = async (payslips: any[]) => {
+    try {
+      await fetch('http://192.168.100.60:3001/api/payslip-logs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          action: 'generated',
+          selectedDates,
+          payslipCount: payslips.length,
+          userIds: selectedUsers.length > 0 ? selectedUsers : null
+        }),
+      });
+    } catch (error) {
+      console.error('Error logging payslip generation:', error);
+    }
+  };
+
+  const fetchPayslipLogs = async () => {
+    try {
+      const response = await fetch('http://192.168.100.60:3001/api/payslip-logs', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      setPayslipLogs(data);
+    } catch (error) {
+      console.error('Error fetching payslip logs:', error);
+    }
+  };
+
+  const releasePayslips = async () => {
+    if (!window.confirm('Are you sure you want to release these payslips to all users? This action cannot be undone.')) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch('http://192.168.100.60:3001/api/payslips/release', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          selectedDates,
+          userIds: selectedUsers.length > 0 ? selectedUsers : null
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        alert(`Successfully released ${data.releasedCount} payslips!`);
+        await logPayslipRelease(data.releasedCount);
+        await fetchPayrollReport();
+      } else {
+        alert(data.message || 'Failed to release payslips');
+      }
+    } catch (error) {
+      console.error('Error releasing payslips:', error);
+      alert('Failed to release payslips');
+    }
+    setLoading(false);
+  };
+
+  const logPayslipRelease = async (count: number) => {
+    try {
+      await fetch('http://192.168.100.60:3001/api/payslip-logs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          action: 'released',
+          selectedDates,
+          payslipCount: count,
+          userIds: selectedUsers.length > 0 ? selectedUsers : null
+        }),
+      });
+    } catch (error) {
+      console.error('Error logging payslip release:', error);
+    }
   };
 
   const fetchPayrollReport = async () => {
@@ -353,7 +444,7 @@ export function PayrollReports() {
 
       {/* Tab Navigation */}
       <div className="flex justify-center mb-6">
-        <div className="bg-slate-800/50 p-1 rounded-xl border border-slate-700/50">
+        <div className="bg-slate-800/50 p-1 rounded-xl border border-slate-700/50 flex gap-1">
           <button
             onClick={() => setActiveTab('generate')}
             className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
@@ -373,6 +464,19 @@ export function PayrollReports() {
             }`}
           >
             Payslip Preview
+          </button>
+          <button
+            onClick={() => {
+              setShowLogsTab(!showLogsTab);
+              if (!showLogsTab) fetchPayslipLogs();
+            }}
+            className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
+              showLogsTab
+                ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg transform scale-105'
+                : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+            }`}
+          >
+            Generation Logs
           </button>
         </div>
       </div>
@@ -552,6 +656,37 @@ export function PayrollReports() {
 
       {activeTab === 'preview' && (
         <>
+          {/* Action Buttons */}
+          {payrollData.length > 0 && (
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex gap-4">
+                <button
+                  onClick={fetchPayrollReport}
+                  disabled={selectedDates.length === 0}
+                  className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 transition-all duration-200 flex items-center gap-2 shadow-lg"
+                >
+                  <Eye className="w-4 h-4" />
+                  Refresh Preview
+                </button>
+                <button
+                  onClick={releasePayslips}
+                  disabled={loading}
+                  className="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-2 rounded-lg font-medium hover:from-green-600 hover:to-green-700 disabled:opacity-50 transition-all duration-200 flex items-center gap-2 shadow-lg"
+                >
+                  <CheckSquare className="w-4 h-4" />
+                  {loading ? 'Releasing...' : 'Release Payslips'}
+                </button>
+              </div>
+              <button
+                onClick={exportToCSV}
+                className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:from-purple-600 hover:to-purple-700 transition-all duration-200 flex items-center gap-2 shadow-lg"
+              >
+                <Download className="w-4 h-4" />
+                Export CSV
+              </button>
+            </div>
+          )}
+
           {/* Summary Cards */}
           {payrollData.length > 0 && (
             <div className="grid md:grid-cols-4 gap-4 mb-6">
@@ -579,19 +714,6 @@ export function PayrollReports() {
                   <p className="text-2xl font-bold text-red-400">{formatCurrency(totalDeductions)}</p>
                 </div>
               </div>
-            </div>
-          )}
-
-          {/* Export Button */}
-          {payrollData.length > 0 && (
-            <div className="flex justify-end mb-6">
-              <button
-                onClick={exportToCSV}
-                className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:from-purple-600 hover:to-purple-700 transition-all duration-200 flex items-center gap-2 shadow-lg"
-              >
-                <Download className="w-4 h-4" />
-                Export CSV
-              </button>
             </div>
           )}
 
