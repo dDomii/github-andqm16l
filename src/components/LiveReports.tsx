@@ -138,11 +138,14 @@ export function LiveReports() {
         <div className="flex items-center gap-4">
           <button
             onClick={fetchActiveUsers}
-            className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 transition-all duration-200 flex items-center gap-2 shadow-lg">
+            disabled={isRefreshing}
             className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 btn-enhanced flex items-center gap-2 shadow-lg"
           >
             <RefreshCw className={`w-4 h-4 transition-transform duration-300 ${isRefreshing ? 'animate-spin' : ''}`} />
             Refresh
+          </button>
+          <div className="text-center">
+            <p className="text-xs text-slate-400">Last Updated</p>
             <p className="text-sm font-medium text-white">{lastUpdate.toLocaleTimeString()}</p>
           </div>
           <div className="text-right">
