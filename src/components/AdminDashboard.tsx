@@ -7,7 +7,9 @@ import {
   Users, 
   PhilippinePeso, 
   Activity,
-  Settings
+  Settings,
+  Clock,
+  Calendar
 } from 'lucide-react';
 
 type TabType = 'users' | 'overtime' | 'payroll' | 'live-reports' | 'time-logs';
