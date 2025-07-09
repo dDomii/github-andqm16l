@@ -63,7 +63,7 @@ export async function getTodayEntry(userId) {
   try {
     const today = new Date().toISOString().split('T')[0];
     const [entries] = await pool.execute(
-      'SELECT * FROM time_entries WHERE user_id = ? AND DATE(clock_in) = ? ORDER BY clock_in DESC LIMIT 1',
+      'SELECT *, overtime_approved FROM time_entries WHERE user_id = ? AND DATE(clock_in) = ? ORDER BY clock_in DESC LIMIT 1',
       [userId, today]
     );
 

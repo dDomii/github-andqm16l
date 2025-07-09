@@ -20,12 +20,35 @@ export function TimeTracking() {
   const [showOvertimeModal, setShowOvertimeModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [showNotifications, setShowNotifications] = useState(false);
   const { token, user } = useAuth();
 
   useEffect(() => {
     fetchTodayEntry();
+    fetchOvertimeNotifications();
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    // Check if it's a new day and reset the entry
+    const checkNewDay = () => {
+      const today = new Date().toISOString().split('T')[0];
+      const lastCheck = localStorage.getItem('lastCheckDate');
+      
+      if (lastCheck !== today) {
+        localStorage.setItem('lastCheckDate', today);
+        // If it's a new day, refresh the today entry
+        fetchTodayEntry();
+      }
+    };
+
+    checkNewDay();
+    // Check every minute for new day
+    const dayCheckInterval = setInterval(checkNewDay, 60000);
+    
+    return () => clearInterval(dayCheckInterval);
   }, []);
 
   const fetchTodayEntry = async () => {
@@ -38,6 +61,21 @@ export function TimeTracking() {
       setTodayEntry(data);
     } catch (error) {
       console.error('Error fetching today entry:', error);
+    }
+  };
+
+  const fetchOvertimeNotifications = async () => {
+    try {
+      const response = await fetch('http://192.168.100.60:3001/api/overtime-notifications', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      if (data.length > 0) {
+        setNotifications(data);
+        setShowNotifications(true);
+      }
+    } catch (error) {
+      console.error('Error fetching overtime notifications:', error);
     }
   };
 
@@ -350,7 +388,12 @@ export function TimeTracking() {
                                 <div className="flex items-center gap-2 mb-2">
                                   <AlertCircle className="w-4 h-4 text-yellow-400" />
                                   <p className="text-sm font-medium text-yellow-400">
-                                    Overtime Request Submitted
+                                    {todayEntry.overtime_approved === null 
+                                      ? 'Overtime Request Pending'
+                                      : todayEntry.overtime_approved 
+                                        ? 'Overtime Request Approved ✓'
+                                        : 'Overtime Request Rejected ✗'
+                                    }
                                   </p>
                                 </div>
                                 {todayEntry.overtime_note && (
@@ -359,7 +402,12 @@ export function TimeTracking() {
                                   </p>
                                 )}
                                 <p className="text-xs text-yellow-500 mt-1">
-                                  Awaiting admin approval
+                                  {todayEntry.overtime_approved === null 
+                                    ? 'Awaiting admin approval'
+                                    : todayEntry.overtime_approved 
+                                      ? 'Your overtime has been approved and will be included in payroll'
+                                      : 'Your overtime request was not approved'
+                                  }
                                 </p>
                               </div>
                             )}
@@ -428,6 +476,12 @@ export function TimeTracking() {
                       {todayEntry && todayEntry.clock_in && todayEntry.clock_out && (
                         <div className="bg-slate-700/50 p-4 rounded-xl text-center border border-slate-600/50">
                           <p className="text-slate-300">You have completed your shift for today.</p>
+                          <button
+                            onClick={handleClockIn}
+                            className="mt-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2 px-4 rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 transition-all duration-200 text-sm"
+                          >
+                            Start New Session
+                          </button>
                         </div>
                       )}
                       
@@ -489,6 +543,54 @@ export function TimeTracking() {
           {activeTab === 'payroll-history' && <PayrollHistory />}
         </div>
       </div>
+
+      {/* Overtime Notifications Modal */}
+      {showNotifications && notifications.length > 0 && (
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-800/95 backdrop-blur-sm rounded-2xl shadow-xl p-6 w-full max-w-md border border-slate-700/50">
+            <div className="flex items-center gap-3 mb-4">
+              <AlertCircle className="w-6 h-6 text-emerald-400" />
+              <h3 className="text-lg font-semibold text-white">Overtime Updates</h3>
+            </div>
+            
+            <div className="space-y-3 mb-6 max-h-60 overflow-y-auto">
+              {notifications.map((notification, index) => (
+                <div key={index} className={`p-3 rounded-lg border ${
+                  notification.overtime_approved 
+                    ? 'bg-emerald-900/20 border-emerald-800/50' 
+                    : 'bg-red-900/20 border-red-800/50'
+                }`}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={`text-sm font-medium ${
+                      notification.overtime_approved ? 'text-emerald-400' : 'text-red-400'
+                    }`}>
+                      {notification.overtime_approved ? 'Overtime Approved ✓' : 'Overtime Rejected ✗'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400">
+                    Date: {new Date(notification.clock_in).toLocaleDateString()}
+                  </p>
+                  {notification.overtime_note && (
+                    <p className="text-xs text-slate-300 mt-1">
+                      Note: {notification.overtime_note}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+            
+            <button
+              onClick={() => {
+                setShowNotifications(false);
+                setNotifications([]);
+              }}
+              className="w-full bg-gradient-to-r from-emerald-500 to-green-600 text-white py-2 px-4 rounded-lg font-medium hover:from-emerald-600 hover:to-green-700 transition-all duration-200"
+            >
+              Got it!
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Overtime Request Modal */}
       {showOvertimeModal && (
