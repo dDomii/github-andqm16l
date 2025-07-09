@@ -91,13 +91,13 @@ app.get('/api/user-payroll-history', authenticate, async (req, res) => {
     if (specificDay) {
       // Get specific day
       query = `SELECT * FROM payslips 
-               WHERE user_id = ? AND DATE(week_start) <= ? AND DATE(week_end) >= ? AND status = 'released'
+               WHERE user_id = ? AND DATE(week_start) <= ? AND DATE(week_end) >= ?
                ORDER BY week_start DESC`;
       params = [req.user.userId, specificDay, specificDay];
     } else if (weekStart && weekEnd) {
       // Get specific week
       query = `SELECT * FROM payslips 
-               WHERE user_id = ? AND week_start = ? AND week_end = ? AND status = 'released'
+               WHERE user_id = ? AND week_start = ? AND week_end = ?
                ORDER BY week_start DESC`;
       params = [req.user.userId, weekStart, weekEnd];
     } else {
