@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Download, Calendar, PhilippinePeso, FileText, AlertCircle, Edit2, Save, X, Eye, Users, CheckSquare, Square } from 'lucide-react';
+import { Download, Calendar, PhilippinePeso, FileText, AlertCircle, Edit2, Save, X, Eye, Users, CheckSquare, Square, RefreshCw } from 'lucide-react';
 
 interface PayrollEntry {
   id: number;
@@ -50,7 +51,7 @@ export function PayrollReports() {
   const [editingEntry, setEditingEntry] = useState<number | null>(null);
   const [editData, setEditData] = useState<Partial<PayrollEntry>>({});
   const [activeTab, setActiveTab] = useState<'generate' | 'preview'>('generate');
-  const [showLogsTab, setShowLogsTab] = useState(false);
+  const [activeTab, setActiveTab] = useState<'generate' | 'preview' | 'logs'>('generate');
   const [payslipLogs, setPayslipLogs] = useState<any[]>([]);
   const [generationMode, setGenerationMode] = useState<'range' | 'specific'>('range');
   const { token } = useAuth();
@@ -467,11 +468,11 @@ export function PayrollReports() {
           </button>
           <button
             onClick={() => {
-              setShowLogsTab(!showLogsTab);
-              if (!showLogsTab) fetchPayslipLogs();
+              setActiveTab('logs');
+              fetchPayslipLogs();
             }}
             className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
-              showLogsTab
+              activeTab === 'logs'
                 ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg transform scale-105'
                 : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
             }`}
@@ -954,6 +955,101 @@ export function PayrollReports() {
           )}
         </>
       )}
+
+     {activeTab === 'logs' && (
+       <div>
+         <div className="flex justify-between items-center mb-6">
+           <div>
+             <h3 className="text-xl font-bold text-white">Payslip Generation Logs</h3>
+             <p className="text-slate-400">Track all payslip generation and release activities</p>
+           </div>
+           <button
+             onClick={fetchPayslipLogs}
+             className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 transition-all duration-200 flex items-center gap-2 shadow-lg"
+           >
+             <RefreshCw className="w-4 h-4" />
+             Refresh
+           </button>
+         </div>
+
+         {payslipLogs.length > 0 ? (
+           <div className="bg-slate-800/90 backdrop-blur-sm rounded-xl shadow-lg overflow-hidden border border-slate-700/50">
+             <div className="overflow-x-auto">
+               <table className="min-w-full">
+                 <thead className="bg-slate-700/50">
+                   <tr>
+                     <th className="text-left py-3 px-4 font-semibold text-slate-300">Date & Time</th>
+                     <th className="text-left py-3 px-4 font-semibold text-slate-300">Action</th>
+                     <th className="text-left py-3 px-4 font-semibold text-slate-300">Period</th>
+                     <th className="text-right py-3 px-4 font-semibold text-slate-300">Count</th>
+                     <th className="text-left py-3 px-4 font-semibold text-slate-300">Admin</th>
+                     <th className="text-left py-3 px-4 font-semibold text-slate-300">Users</th>
+                   </tr>
+                 </thead>
+                 <tbody className="divide-y divide-slate-700/50">
+                   {payslipLogs.map((log) => (
+                     <tr key={log.id} className="hover:bg-slate-700/30 transition-colors">
+                       <td className="py-3 px-4">
+                         <div className="text-white">
+                           {new Date(log.created_at).toLocaleDateString('en-US', {
+                             month: 'short',
+                             day: 'numeric',
+                             year: 'numeric'
+                           })}
+                         </div>
+                         <div className="text-sm text-slate-400">
+                           {new Date(log.created_at).toLocaleTimeString('en-US', {
+                             hour: '2-digit',
+                             minute: '2-digit'
+                           })}
+                         </div>
+                       </td>
+                       <td className="py-3 px-4">
+                         <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                           log.action === 'generated'
+                             ? 'bg-blue-900/20 text-blue-400 border border-blue-800/50'
+                             : 'bg-green-900/20 text-green-400 border border-green-800/50'
+                         }`}>
+                           {log.action === 'generated' ? 'Generated' : 'Released'}
+                         </span>
+                       </td>
+                       <td className="py-3 px-4">
+                         <div className="text-white">
+                           {formatDate(log.period_start)} - {formatDate(log.period_end)}
+                         </div>
+                       </td>
+                       <td className="py-3 px-4 text-right">
+                         <span className="font-semibold text-emerald-400">{log.payslip_count}</span>
+                       </td>
+                       <td className="py-3 px-4">
+                         <span className="text-white font-medium">{log.admin_username}</span>
+                       </td>
+                       <td className="py-3 px-4">
+                         {log.user_ids ? (
+                           <span className="text-sm text-slate-400">
+                             {JSON.parse(log.user_ids).length} selected users
+                           </span>
+                         ) : (
+                           <span className="text-sm text-slate-400">All users</span>
+                         )}
+                       </td>
+                     </tr>
+                   ))}
+                 </tbody>
+               </table>
+             </div>
+           </div>
+         ) : (
+           <div className="text-center py-12">
+             <div className="bg-slate-700/30 p-4 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+               <FileText className="w-10 h-10 text-slate-500" />
+             </div>
+             <h3 className="text-lg font-medium text-white mb-2">No Generation Logs</h3>
+             <p className="text-slate-400">No payslip generation or release activities recorded yet.</p>
+           </div>
+         )}
+       </div>
+     )}
     </div>
   );
 }

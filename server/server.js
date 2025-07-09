@@ -103,7 +103,7 @@ app.get('/api/user-payroll-history', authenticate, async (req, res) => {
     } else {
       // Get current year if no specific week
       query = `SELECT * FROM payslips 
-               WHERE user_id = ? AND YEAR(week_start) = ?
+               WHERE user_id = ? AND YEAR(week_start) = ? AND status = 'released'
                ORDER BY week_start DESC`;
       params = [req.user.userId, new Date().getFullYear()];
     }

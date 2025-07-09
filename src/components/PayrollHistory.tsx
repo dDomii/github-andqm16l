@@ -92,15 +92,15 @@ export function PayrollHistory() {
   const fetchPayrollHistory = async () => {
     setLoading(true);
     try {
-      let url = `http://192.168.100.60:3001/api/user-payroll-history?weekStart=${selectedWeek}`;
+      let url = `http://192.168.100.60:3001/api/user-payroll-history`;
       
       if (selectedDay) {
         // If specific day is selected, fetch only that day's data
-        url += `&specificDay=${selectedDay}`;
+        url += `?specificDay=${selectedDay}`;
       } else {
         // Fetch entire week
         const weekEnd = getWeekEnd(selectedWeek);
-        url += `&weekEnd=${weekEnd}`;
+        url += `?weekStart=${selectedWeek}&weekEnd=${weekEnd}`;
       }
       
       const response = await fetch(url, {

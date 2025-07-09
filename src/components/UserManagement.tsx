@@ -446,7 +446,7 @@ export function UserManagement() {
                 <div className="divide-y divide-slate-700/30 max-h-80 overflow-y-auto">
                   {deptUsers.length > 0 ? (
                     deptUsers.map((user) => (
-                      <div key={user.id} className="p-4 hover:bg-slate-700/20 transition-all duration-200 border-l-2 border-transparent hover:border-emerald-500/50">
+                      <div key={user.id} className="p-4 hover:bg-slate-700/20 transition-all duration-200 border-l-2 border-transparent hover:border-emerald-500/50 border-b border-slate-700/20 last:border-b-0">
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex items-start gap-3 flex-1 min-w-0">
                             <div className={`bg-gradient-to-br ${colors.accent} p-1.5 rounded-lg border ${colors.border} flex-shrink-0`}>
@@ -458,7 +458,7 @@ export function UserManagement() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-2">
-                                <h4 className="font-semibold text-white text-base truncate">{user.username}</h4>
+                                <h4 className="font-semibold text-white text-base break-words">{user.username}</h4>
                                 {user.role === 'admin' && (
                                   <span className="bg-gradient-to-r from-emerald-500/20 to-green-600/20 text-emerald-400 px-2 py-0.5 rounded-full text-xs font-medium border border-emerald-800/50">
                                     ADMIN
@@ -479,40 +479,40 @@ export function UserManagement() {
                                   </span>
                                 )}
                               </div>
-                              <div className="mt-2 space-y-1">
+                              <div className="mt-3 space-y-1.5 bg-slate-800/30 p-2 rounded-lg border border-slate-600/30">
                                 <div className="flex items-center gap-2 text-xs">
                                   <span className="text-slate-500">Created:</span>
                                   <span className="text-slate-300">{new Date(user.created_at).toLocaleDateString()}</span>
                                 </div>
                                 <div className="flex items-center gap-2 text-xs">
                                   <span className="text-slate-500">GCash:</span>
-                                  <span className="text-green-400 font-mono">{user.gcash_number || 'Not provided'}</span>
+                                  <span className="text-green-400 font-mono break-all">{user.gcash_number || 'Not provided'}</span>
                                 </div>
                               </div>
                             </div>
                           </div>
                           
-                          <div className="flex items-center gap-1 flex-shrink-0">
+                          <div className="flex flex-col gap-1 flex-shrink-0">
                             <button
                               onClick={() => handleEdit(user)}
-                              className="text-blue-400 hover:text-blue-300 p-2 rounded-lg hover:bg-blue-900/30 transition-all duration-200 border border-transparent hover:border-blue-700/50"
+                              className="text-blue-400 hover:text-blue-300 p-1.5 rounded-lg hover:bg-blue-900/30 transition-all duration-200 border border-transparent hover:border-blue-700/50"
                               title="Edit User"
                             >
-                              <Edit2 className="w-4 h-4" />
+                              <Edit2 className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => handleTimeEdit(user.id)}
-                              className="text-emerald-400 hover:text-emerald-300 p-2 rounded-lg hover:bg-emerald-900/30 transition-all duration-200 border border-transparent hover:border-emerald-700/50"
+                              className="text-emerald-400 hover:text-emerald-300 p-1.5 rounded-lg hover:bg-emerald-900/30 transition-all duration-200 border border-transparent hover:border-emerald-700/50"
                               title="Adjust Time"
                             >
-                              <Clock className="w-4 h-4" />
+                              <Clock className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => handleDeleteClick(user)}
-                              className="text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-900/30 transition-all duration-200 border border-transparent hover:border-red-700/50"
+                              className="text-red-400 hover:text-red-300 p-1.5 rounded-lg hover:bg-red-900/30 transition-all duration-200 border border-transparent hover:border-red-700/50"
                               title="Delete User"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         </div>
