@@ -549,8 +549,10 @@ export function UserManagement() {
                     deptUsers.map((user) => (
                       <div 
                         key={user.id} 
-                        className={`p-4 hover:bg-slate-700/20 transition-all duration-200 border-l-2 border-transparent hover:${colors.border.replace('border-', 'border-l-')} last:border-b-0`}
-                        style={{ borderBottomColor: DEPARTMENT_COLORS[department].border.split(' ')[1].replace('border-', '').replace('/30', '/20') }}
+                        className={`p-4 hover:bg-slate-700/20 transition-all duration-200 border-l-2 border-transparent hover:border-l-emerald-500/50 last:border-b-0`}
+                        style={{ 
+                          borderBottomColor: colors.border ? colors.border.split(' ')[1]?.replace('border-', '')?.replace('/30', '/20') || 'rgba(71, 85, 105, 0.2)' : 'rgba(71, 85, 105, 0.2)'
+                        }}
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex items-start gap-3 flex-1 min-w-0">
